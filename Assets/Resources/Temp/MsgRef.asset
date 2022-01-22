@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7995b13bc7a02346a784cb06e31dc52, type: 3}
+  m_Name: MsgRef
+  m_EditorClassIdentifier: 
+  Label:
+  - Label: UI_None
+    Id: 0
+  - Label: UI_NewGame
+    Id: 1
+  - Label: UI_Continue
+    Id: 2
+  - Label: UI_Setting
+    Id: 3
+  - Label: UI_Exit
+    Id: 4
+  - Label: UI_Language
+    Id: 5
+  - Label: UI_SaveAndExit
+    Id: 6
+  - Label: UI_CloseSetting
+    Id: 7
+  - Label: UI_Confirm
+    Id: 8
+  - Label: UI_Cancel
+    Id: 9
+  - Label: UI_NewGameCheck
+    Id: 10
+  - Label: Name_None
+    Id: 11
+  - Label: Name_CloseSetting
+    Id: 12
+  - Label: Name_Confirm
+    Id: 13
+  - Label: Name_Cancel
+    Id: 14
+  MaxId: 15
