@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class TableAccessorBase<T, V>
 {
-    private static Dictionary<T, V> _data;
+    private Dictionary<T, V> _data;
 
-    public static void LoadData()
+    public TableAccessorBase()
     {
         var data = Resources.Load<ScriptableObjectBase>($"ExcelData/{typeof(V).Name}");
         if (!data)
