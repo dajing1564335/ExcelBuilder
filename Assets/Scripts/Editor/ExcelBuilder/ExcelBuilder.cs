@@ -164,9 +164,9 @@ public class ExcelBuilder
         }
     }
 
-    static string GetTableName(string name, int count, string fileName)
+    static string GetTableName(string name, string table0Name, string fileName)
     {
-        return (name == "Sheet1" && count == 1) ? fileName.Replace(".xlsx", string.Empty) : name;
+        return (name == "Sheet1" && name == table0Name) ? fileName.Replace(".xlsx", string.Empty) : name;
     }
 
     [MenuItem("ExcelBuilder/BuildTableAndLoad")]
@@ -208,7 +208,7 @@ public class ExcelBuilder
                     }
                     labels.Add(label);
                 }
-                var enumName = GetTableName(table.TableName, tables.Count, file.Name);
+                var enumName = GetTableName(table.TableName, tables[0].TableName, file.Name);
                 CreateTableEnum(enumName, labels);
 
                 enumNames.Add(enumName);
@@ -283,7 +283,7 @@ public class ExcelBuilder
                     return;
                 }
 
-                var tableName = GetTableName(table.TableName, excelData[index].Count, fileInfos[index].Name);
+                var tableName = GetTableName(table.TableName, excelData[index][0].TableName, fileInfos[index].Name);
                 
                 CreateTableDataClass(tableName, fields);
                 CreateTableSO(tableName, fields);
@@ -478,7 +478,7 @@ public class ExcelBuilder
                 {
                     continue;
                 }
-                var tableName = GetTableName(table.TableName, tables.Count, file.Name);
+                var tableName = GetTableName(table.TableName, tables[0].TableName, file.Name);
 
                 //CreateTableData
                 var assetName = tableName + "Data";
