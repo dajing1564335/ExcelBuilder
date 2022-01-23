@@ -4,20 +4,20 @@ using UnityEngine.UI;
 public class TextEx : Text
 {
     [SerializeField, SearchableEnum]
-    private MsgLabel _msgId;
+    private MsgLabel _label;
 
-    public MsgLabel MsgId
+    public MsgLabel Label
     {
-        get => _msgId;
+        get => _label;
         set
         {
-            _msgId = value;
+            _label = value;
             text = MsgAccessor.GetMessage(value);
         }
     }
 
     protected override void Start()
     {
-        text = MsgAccessor.GetMessage(_msgId);
+        text = MsgAccessor.GetMessage(_label);
     }
 }

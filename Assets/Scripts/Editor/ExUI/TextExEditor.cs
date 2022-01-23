@@ -8,7 +8,7 @@ public class TextExEditor : Editor
         base.OnInspectorGUI();
 
         var textEx = (TextEx)target;
-        textEx.text = MsgAccessor.GetMessage(textEx.MsgId);
+        textEx.text = MsgAccessor.GetMessage(textEx.Label);
     }
 }
 
