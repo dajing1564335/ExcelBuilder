@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TableAccessorBase<T, V>
+public class TableAccessorDictionary<T, V>
 {
     private Dictionary<T, V> _data;
 
-    public TableAccessorBase()
+    public TableAccessorDictionary()
     {
         var data = Resources.Load<ScriptableObjectBase>($"ExcelData/{typeof(V).Name}");
         if (!data)
