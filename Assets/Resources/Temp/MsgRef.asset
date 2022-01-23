@@ -13,34 +13,34 @@ MonoBehaviour:
   m_Name: MsgRef
   m_EditorClassIdentifier: 
   Label:
-  - Label: UI_None
+  - Label: None
     Id: 0
-  - Label: UI_NewGame
+  - Label: NewGame
     Id: 1
-  - Label: UI_Continue
+  - Label: Continue
     Id: 2
-  - Label: UI_Setting
+  - Label: Setting
     Id: 3
-  - Label: UI_Exit
+  - Label: Exit
     Id: 4
-  - Label: UI_Language
+  - Label: Language
     Id: 5
-  - Label: UI_SaveAndExit
+  - Label: SaveAndExit
     Id: 6
-  - Label: UI_CloseSetting
+  - Label: CloseSetting
     Id: 7
-  - Label: UI_Confirm
+  - Label: Confirm
     Id: 8
-  - Label: UI_Cancel
+  - Label: Cancel
     Id: 9
-  - Label: UI_NewGameCheck
+  - Label: NewGameCheck
     Id: 10
-  - Label: Name_None
+  - Label: Jack
     Id: 11
-  - Label: Name_CloseSetting
+  - Label: Lisa
     Id: 12
-  - Label: Name_Confirm
+  - Label: Zhangsan
     Id: 13
-  - Label: Name_Cancel
+  - Label: Lisi
     Id: 14
   MaxId: 15

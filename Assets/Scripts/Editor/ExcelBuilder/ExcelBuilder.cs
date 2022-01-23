@@ -84,10 +84,10 @@ public class ExcelBuilder
                 {
                     continue;
                 }
-                var msgLabel = $"{table.TableName}_{table.Rows[i][0]}";
+                var msgLabel = table.Rows[i][0].ToString();
                 if (msgLabels.Contains(msgLabel))
                 {
-                    Debug.LogError($"MsgLabel not unique.[{table.TableName}]-[{msgLabel}]");
+                    Debug.LogError($"MsgLabel not unique.[{msgLabel}]");
                     return;
                 }
                 msgLabels.Add(msgLabel);

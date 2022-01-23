@@ -25,10 +25,10 @@ MonoBehaviour:
     - "\u786E\u5B9A"
     - "\u53D6\u6D88"
     - "\u65E7\u7684\u5B58\u6863\u4F1A\u6D88\u5931\u3002\u786E\u5B9A\u5417\uFF1F"
-    - "\u65B0\u7684\u6587\u672C"
-    - "\u786E\u5B9A\u653E\u5F03\u4FEE\u6539\u5417\uFF1F"
-    - "\u786E\u5B9A"
-    - "\u53D6\u6D88"
+    - "\u6770\u514B"
+    - "\u4E3D\u8428"
+    - "\u5F20\u4E09"
+    - "\u674E\u56DB"
   - Datas:
     - New Text
     - NewGame
@@ -41,7 +41,7 @@ MonoBehaviour:
     - Confirm
     - Cancel
     - ???
-    - New Text
-    - ???
-    - Confirm
-    - Cancel
+    - Jack
+    - Lisa
+    - Zhangsan
+    - Lisi

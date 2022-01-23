@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: StudentData
   m_EditorClassIdentifier: 
   Datas:
-  - name: 13
+  - name: 12
     age: 17
     score: 0
     like: 0100000001000000
     type: 0
     Rank: 01000000020000000300000004000000040000000600000007000000
-    speak: 0d0000000d000000
-  - name: 13
+    speak: 0c0000000b000000
+  - name: 11
     age: 18
     score: 3
     like: 020000000200000000000000
