@@ -221,8 +221,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Datas:
-  - name: 
+  - name: 0
     age: 0
     score: 0
     like: 00000000000000000000000000000000
     type: 0
+    Rank: 
+    speak: 
