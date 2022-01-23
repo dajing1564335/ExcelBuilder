@@ -15,10 +15,11 @@ public class LessonSO : ScriptableObjectBase
 			{
 				continue;
 			}
-			Datas.Add(new LessonData(
-				TypeConvert.GetValue<int>(table.Rows[i][1].ToString()),
+			var data = new LessonData(
+				TypeConvert.GetValue<int>(table.Rows[i][1].ToString()), 
 				TypeConvert.GetValue<float>(table.Rows[i][2].ToString())
-				));
+				);
+			Datas.Add(data);
 		}
 	}
 }

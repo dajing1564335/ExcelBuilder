@@ -15,10 +15,11 @@ public class ScoreSO : ScriptableObjectBase
 			{
 				continue;
 			}
-			Datas.Add(new ScoreData(
-				TypeConvert.GetValue<int>(table.Rows[i][1].ToString()),
+			var data = new ScoreData(
+				TypeConvert.GetValue<int>(table.Rows[i][1].ToString()), 
 				TypeConvert.GetValue<int>(table.Rows[i][2].ToString())
-				));
+				);
+			Datas.Add(data);
 		}
 	}
 }

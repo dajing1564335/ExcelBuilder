@@ -75,7 +75,7 @@ public static class TypeConvert
             }
             catch
             {
-                Debug.LogError($"{value} is not a {typeof(T).Name}.");
+                Debug.LogError($"{value} is not a [{typeof(T).Name}].");
             }
         }
 

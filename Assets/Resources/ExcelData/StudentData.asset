@@ -9,22 +9,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a08bb6dda3f1c9469c8e8a8042e4be7, type: 3}
+  m_Script: {fileID: 11500000, guid: dd70f9173d837704b9d1e9c1bca6df1d, type: 3}
   m_Name: StudentData
   m_EditorClassIdentifier: 
   Datas:
-  - name: aaa
+  - name: 13
     age: 17
     score: 0
-    like: 1
+    like: 0100000001000000
     type: 0
-  - name: ccc
+    Rank: 01000000020000000300000004000000040000000600000007000000
+    speak: 0d0000000d000000
+  - name: 13
     age: 18
     score: 3
-    like: 2
+    like: 020000000200000000000000
     type: 1
-  - name: zzz
+    Rank: 01000000
+    speak: 0d000000
+  - name: 13
     age: 10
     score: 4
-    like: 0
+    like: 00000000
     type: 3
+    Rank: 01000000020000000300000004000000
+    speak: 0d000000

@@ -108,7 +108,7 @@ public class ExcelBuilder
         AssetDatabase.SaveAssets();
 
         AssetDatabase.Refresh();
-        Debug.Log("Msg build end.");
+        Debug.Log("Msg build and load end.");
     }
 
     private static void CreateLanguage(string[] languages)
@@ -151,10 +151,11 @@ public class ExcelBuilder
     #endregion
 
     #region BuildTable
-    struct Field
+    class Field
     {
         public string Type;
         public string Name;
+        public int ListCount = 0;
 
         public Field(string type, string name)
         {
@@ -237,23 +238,49 @@ public class ExcelBuilder
                 {
                     continue;
                 }
-                
                 List<Field> fields = new List<Field>();
+                int listCount = 0;
                 for (int i = 1; i < table.Columns.Count; i++)
                 {
-                    if (table.Rows[0][i] is DBNull || table.Rows[1][i] is DBNull)
+                    var type = table.Rows[0][i].ToString();
+                    if (type == "[")
+                    {
+                        if (fields.Count > 0 && listCount == 0)
+                        {
+                            listCount = 1;
+                            continue;
+                        }
+                        else
+                        {
+                            Debug.LogError($"Invaild \"[\" at [{table.TableName}]");
+                            return;
+                        }
+                    }
+                    if (listCount > 0)
+                    {
+                        listCount++;
+                        if (type == "]")
+                        {
+                            fields[fields.Count - 1].ListCount = listCount;
+                            listCount = 0;
+                        }
+                        continue;
+                    }
+                    if (listCount == 0 && (table.Rows[0][i] is DBNull || table.Rows[1][i] is DBNull))
                     {
                         Debug.LogError($"Table has empty type or field! [{fileInfos[index].Name}]");
-                        return;
                     }
-                    var type = table.Rows[0][i].ToString();
-                    var name = table.Rows[1][i].ToString();
                     if (!TypeConvert.SupportType.Contains(type) && !enumNames.Contains(type))
                     {
                         Debug.LogError($"There are not support type! [{type}]");
                         return;
                     }
-                    fields.Add(new Field(type, name));
+                    fields.Add(new Field(type, table.Rows[1][i].ToString()));
+                }
+                if (listCount > 0)
+                {
+                    Debug.LogError($"Miss \"]\" at [{table.TableName}]");
+                    return;
                 }
 
                 var tableName = GetTableName(table.TableName, excelData[index].Count, fileInfos[index].Name);
@@ -303,7 +330,11 @@ public class ExcelBuilder
 
     private static void CreateTableDataClass(string name, List<Field> fields)
     {
-        var code = new StringBuilder();
+        Func<Field, string> GetType = (field) => field.ListCount == 0 ? field.Type : $"List<{field.Type}>";
+
+        var code = new StringBuilder(); 
+        code.AppendLine("using System.Collections.Generic;");
+        code.AppendLine();
         code.AppendLine("namespace Table");
         code.AppendLine("{");
         code.AppendLine("\t[System.Serializable]");
@@ -311,13 +342,13 @@ public class ExcelBuilder
         code.AppendLine("\t{");
         foreach (var field in fields)
         {
-            code.AppendLine($"\t\tpublic {field.Type} {field.Name};");
+            code.AppendLine($"\t\tpublic {GetType(field)} {field.Name};");
         }
         code.AppendLine();
-        code.Append($"\t\tpublic {name}Data({fields[0].Type} {fields[0].Name}");
+        code.Append($"\t\tpublic {name}Data({GetType(fields[0])} {fields[0].Name}");
         for (int i = 1; i < fields.Count; i++)
         {
-            code.Append($", {fields[i].Type} {fields[i].Name}");
+            code.Append($", {GetType(fields[i])} {fields[i].Name}");
         }
         code.AppendLine(")");
         code.AppendLine("\t\t{");
@@ -334,6 +365,11 @@ public class ExcelBuilder
 
     private static void CreateTableSO(string name, List<Field> fields)
     {
+        Func<Field, int, string> GetFieldValue = (field, index) =>
+           field.ListCount == 0
+               ? $"\t\t\t\tTypeConvert.GetValue<{field.Type}>(table.Rows[i][{index}].ToString())"
+               : $"\t\t\t\tnew List<{field.Type}>()";
+
         var code = new StringBuilder();
         code.AppendLine("using System.Collections.Generic;");
         code.AppendLine("using System.Data;");
@@ -352,13 +388,34 @@ public class ExcelBuilder
         code.AppendLine("\t\t\t{");
         code.AppendLine("\t\t\t\tcontinue;");
         code.AppendLine("\t\t\t}"); 
-        code.AppendLine($"\t\t\tDatas.Add(new {name}Data(");
+        code.AppendLine($"\t\t\tvar data = new {name}Data(");
+        int index = 0;
         for (int i = 0; i < fields.Count - 1; ++i)
         {
-            code.AppendLine($"\t\t\t\tTypeConvert.GetValue<{fields[i].Type}>(table.Rows[i][{i + 1}].ToString()),");
+            index += fields[i].ListCount + 1;
+            code.AppendLine(GetFieldValue(fields[i], index) +", ");
         }
-        code.AppendLine($"\t\t\t\tTypeConvert.GetValue<{fields[fields.Count - 1].Type}>(table.Rows[i][{fields.Count}].ToString())");
-        code.AppendLine("\t\t\t\t));");
+        index += fields[fields.Count - 1].ListCount + 1;
+        code.AppendLine(GetFieldValue(fields[fields.Count - 1], index));
+        code.AppendLine("\t\t\t\t);");
+        index = 0;
+        foreach (var field in fields)
+        {
+            index++;
+            if (field.ListCount > 0)
+            {
+                code.AppendLine($"\t\t\tfor (int j = {index + 1}; j < {index + field.ListCount + 1}; j++)");
+                code.AppendLine("\t\t\t{");
+                code.AppendLine("\t\t\t\tif (table.Rows[i][j] is System.DBNull)");
+                code.AppendLine("\t\t\t\t{");
+                code.AppendLine("\t\t\t\t\tbreak;");
+                code.AppendLine("\t\t\t\t}");
+                code.AppendLine($"\t\t\t\tdata.{field.Name}.Add(TypeConvert.GetValue<{field.Type}>(table.Rows[i][j].ToString()));");
+                code.AppendLine("\t\t\t}");
+                index += field.ListCount;
+            }
+        }
+        code.AppendLine("\t\t\tDatas.Add(data);");
         code.AppendLine("\t\t}");
         code.AppendLine("\t}");
         code.AppendLine("}");
@@ -396,6 +453,7 @@ public class ExcelBuilder
         var builderData = Resources.Load<ExcelBuilderSO>($"Temp/ExcelBuilderData");
         if (!builderData)
         {
+            Debug.LogError("Please build first.");
             return;
         }
         if (builderData.NeedRebuild)
