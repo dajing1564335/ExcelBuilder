@@ -167,12 +167,12 @@ public class ExcelBuilder
     struct ClassInfo
     {
         public string Name;
-        public bool IsList;
+        public bool IsDic;
 
-        public ClassInfo(string name, bool isList)
+        public ClassInfo(string name, bool isDic)
         {
             Name = name;
-            IsList = isList;
+            IsDic = isDic;
         }
     }
 
@@ -202,7 +202,7 @@ public class ExcelBuilder
             
             foreach (DataTable table in tables)
             {
-                if (table.Columns.Count < 1 || table.Rows.Count < 3 || table.Rows[0][0].ToString() == "list")
+                if (table.Columns.Count < 1 || table.Rows.Count < 3)
                 {
                     continue;
                 }
@@ -222,7 +222,7 @@ public class ExcelBuilder
                     labels.Add(label);
                 }
                 var folderName = GetTableName(table.TableName, tables[0].TableName, file.Name);
-                CreateTableEnum(folderName, labels);
+                CreateTableEnum(folderName, labels, table.Rows[0][0].ToString() == "dic");
 
                 folderNames.Add(folderName);
             }
@@ -292,10 +292,10 @@ public class ExcelBuilder
 
                 CreateTableDataClass(tableName, fields);
 
-                var list = table.Rows[0][0].ToString() == "list";
-                CreateTableSO(tableName, fields, list);
+                var dic = table.Rows[0][0].ToString() == "dic";
+                CreateTableSO(tableName, fields, dic);
 
-                classInfos.Add(new ClassInfo(tableName, list));
+                classInfos.Add(new ClassInfo(tableName, dic));
             }
         }
         CreateTableAccessor(classInfos);
@@ -315,17 +315,21 @@ public class ExcelBuilder
         Debug.Log("Build table end. Wait refresh.");
     }
 
-    private static void CreateTableEnum(string name, List<string> labels)
+    private static void CreateTableEnum(string name, List<string> labels, bool isDic)
     {
         var folder = TableFolder + name + "/";
         Directory.CreateDirectory(folder);
 
-        var fileName = name + "Ref";
-        var tabelRef = Resources.Load<LabelRefSO>($"Temp/{fileName}");
-        if (!tabelRef)
+        LabelRefSO tabelRef = default;
+        if (isDic)
         {
-            tabelRef = ScriptableObject.CreateInstance<LabelRefSO>();
-            AssetDatabase.CreateAsset(tabelRef, $"Assets/Resources/Temp/{fileName}.asset");
+            var fileName = name + "Ref";
+            tabelRef = Resources.Load<LabelRefSO>($"Temp/{fileName}");
+            if (!tabelRef)
+            {
+                tabelRef = ScriptableObject.CreateInstance<LabelRefSO>();
+                AssetDatabase.CreateAsset(tabelRef, $"Assets/Resources/Temp/{fileName}.asset");
+            }
         }
 
         var code = new StringBuilder();
@@ -335,13 +339,23 @@ public class ExcelBuilder
         code.AppendLine("\t{");
         foreach (var field in labels)
         {
-            code.AppendLine($"\t\t{field} = {tabelRef.AddLabel(field)},");
+            if (isDic)
+            {
+                code.AppendLine($"\t\t{field} = {tabelRef.AddLabel(field)},");
+            }
+            else
+            {
+                code.AppendLine($"\t\t{field},");
+            }
         }
         code.AppendLine("\t}");
         code.AppendLine("}");
 
-        EditorUtility.SetDirty(tabelRef);
-        AssetDatabase.SaveAssets();
+        if (isDic)
+        {
+            EditorUtility.SetDirty(tabelRef);
+            AssetDatabase.SaveAssets();
+        }
 
         File.WriteAllText(folder + name + ".cs", code.ToString());
     }
@@ -384,7 +398,7 @@ public class ExcelBuilder
         File.WriteAllText(folder + name + "Data.cs", code.ToString());
     }
 
-    private static void CreateTableSO(string name, List<Field> fields, bool isList = false)
+    private static void CreateTableSO(string name, List<Field> fields, bool isDic = false)
     {
         Func<Field, int, string> GetFieldValue = (field, index) =>
            field.ListCount == 0
@@ -405,7 +419,7 @@ public class ExcelBuilder
         code.AppendLine($"\t\tDatas = new List<{name}Data>();");
         code.AppendLine("\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t{");
-        if (!isList)
+        if (isDic)
         {
             code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull)");
             code.AppendLine("\t\t\t{");
@@ -455,13 +469,13 @@ public class ExcelBuilder
         code.AppendLine("{");
         foreach (var info in infos)
         {
-            if (info.IsList)
+            if (info.IsDic)
             {
-                code.AppendLine($"\tpublic static TableAccessorList<{info.Name}Data> {info.Name};");
+                code.AppendLine($"\tpublic static TableAccessorDictionary<{info.Name}, {info.Name}Data> {info.Name};");
             }
             else
             {
-                code.AppendLine($"\tpublic static TableAccessorDictionary<{info.Name}, {info.Name}Data> {info.Name};");
+                code.AppendLine($"\tpublic static TableAccessorList<{info.Name}Data> {info.Name};");
             }
         }
         code.AppendLine();
@@ -469,13 +483,13 @@ public class ExcelBuilder
         code.AppendLine("\t{");
         foreach (var info in infos)
         {
-            if (info.IsList)
+            if (info.IsDic)
             {
-                code.AppendLine($"\t\t{info.Name} = new TableAccessorList<{info.Name}Data>();");
+                code.AppendLine($"\t\t{info.Name} = new TableAccessorDictionary<{info.Name}, {info.Name}Data>();");
             }
             else
             {
-                code.AppendLine($"\t\t{info.Name} = new TableAccessorDictionary<{info.Name}, {info.Name}Data>();");
+                code.AppendLine($"\t\t{info.Name} = new TableAccessorList<{info.Name}Data>();");
             }
         }
         code.AppendLine("\t}");
