@@ -153,11 +153,11 @@ public class ExcelBuilder
     #region BuildTable
     class Field
     {
-        public string Type;
+        public string[] Type;
         public string Name;
         public int ListCount = 0;
 
-        public Field(string type, string name)
+        public Field(string[] type, string name)
         {
             Type = type;
             Name = name;
@@ -202,7 +202,7 @@ public class ExcelBuilder
             
             foreach (DataTable table in tables)
             {
-                if (table.Columns.Count < 1 || table.Rows.Count < 3)
+                if (table.Columns.Count < 1 || table.Rows.Count < 3 || table.Rows[0][0].ToString() == "list")
                 {
                     continue;
                 }
@@ -267,16 +267,31 @@ public class ExcelBuilder
                         }
                         continue;
                     }
-                    if (listCount == 0 && (table.Rows[0][i] is DBNull || table.Rows[1][i] is DBNull))
+                    if (listCount == 0 && (type == string.Empty || table.Rows[1][i] is DBNull))
                     {
                         Debug.LogError($"Table has empty type or field! [{fileInfos[index].Name}]");
                     }
-                    if (!TypeConvert.SupportType.Contains(type) && !folderNames.Contains(type))
+                    var typeList = type.Split(';');
+                    if (typeList.Length == 1)
                     {
-                        Debug.LogError($"There are not support type! [{type}]");
-                        return;
+                        if (!TypeConvert.SupportType.Contains(typeList[0]) && !folderNames.Contains(typeList[0]))
+                        {
+                            Debug.LogError($"There are not support type! [{typeList[0]}]");
+                            return;
+                        }
                     }
-                    fields.Add(new Field(type, table.Rows[1][i].ToString()));
+                    else
+                    {
+                        foreach (var t in typeList)
+                        {
+                            if (!folderNames.Contains(t))
+                            {
+                                Debug.LogError($"Muilt type must be table enum! [{type}-{t}]");
+                                return;
+                            }
+                        }
+                    }
+                    fields.Add(new Field(typeList, table.Rows[1][i].ToString()));
                 }
                 if (listCount > 0)
                 {
@@ -362,7 +377,11 @@ public class ExcelBuilder
 
     private static void CreateTableDataClass(string name, List<Field> fields)
     {
-        Func<Field, string> GetType = (field) => field.ListCount == 0 ? field.Type : $"List<{field.Type}>";
+        Func<Field, string> GetType = (field) =>
+        {
+            var type = field.Type.Length == 1 && TypeConvert.SupportType.Contains(field.Type[0]) ? field.Type[0] : "int";
+            return field.ListCount == 0 ? type : $"List<{type}>";
+        };
 
         var folder = TableFolder + name + "/";
         Directory.CreateDirectory(folder);
@@ -400,11 +419,33 @@ public class ExcelBuilder
 
     private static void CreateTableSO(string name, List<Field> fields, bool isDic = false)
     {
-        Func<Field, int, string> GetFieldValue = (field, index) =>
-           field.ListCount == 0
-               ? $"\t\t\t\tTypeConvert.GetValue<{field.Type}>(table.Rows[i][{index}].ToString())"
-               : $"\t\t\t\tnew List<{field.Type}>()";
+        Func<string, Field, string> GetTableEnumValue = (j, field) =>
+        {
+            var ret = new StringBuilder();
+            ret.Append($"TypeConvert.GetValue(table.Rows[i][{j}].ToString(), new string[] {{ ");
+            foreach (var type in field.Type)
+            {
+                ret.Append($"\"{type}\", ");
+            }
+            ret.Append("})");
+            return ret.ToString();
+        };
 
+        Func<Field, int, string> GetFieldValue = (field, index) =>
+        {
+            if (field.Type.Length == 1 && TypeConvert.SupportType.Contains(field.Type[0]))
+            {
+                return field.ListCount == 0
+                    ? $"\t\t\t\tTypeConvert.GetValue<{field.Type[0]}>(table.Rows[i][{index}].ToString())"
+                    : $"\t\t\t\tnew List<{field.Type[0]}>()";
+            }
+            else
+            {
+                return field.ListCount == 0
+                    ? $"\t\t\t\t{GetTableEnumValue(index.ToString(), field)}"
+                    : $"\t\t\t\tnew List<int>()";
+            }
+        };
         var code = new StringBuilder();
         code.AppendLine("using System.Collections.Generic;");
         code.AppendLine("using System.Data;");
@@ -448,7 +489,7 @@ public class ExcelBuilder
                 code.AppendLine("\t\t\t\t{");
                 code.AppendLine("\t\t\t\t\tbreak;");
                 code.AppendLine("\t\t\t\t}");
-                code.AppendLine($"\t\t\t\tdata.{field.Name}.Add(TypeConvert.GetValue<{field.Type}>(table.Rows[i][j].ToString()));");
+                code.AppendLine($"\t\t\t\tdata.{field.Name}.Add({(TypeConvert.SupportType.Contains(field.Type[0]) ? $"TypeConvert.GetValue<{field.Type[0]}>(table.Rows[i][j].ToString())" : GetTableEnumValue("j", field))});");
                 code.AppendLine("\t\t\t}");
                 index += field.ListCount;
             }

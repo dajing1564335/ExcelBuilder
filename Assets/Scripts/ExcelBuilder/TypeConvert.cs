@@ -67,18 +67,41 @@ public static class TypeConvert
             }
         }
 
-        if (typeof(T).IsEnum)
+        //if (typeof(T).IsEnum)
+        //{
+        //    try
+        //    {
+        //        return (T)Enum.Parse(typeof(T), value);
+        //    }
+        //    catch
+        //    {
+        //        Debug.LogError($"{value} is not a [{typeof(T).Name}].");
+        //    }
+        //}
+
+        return default;
+    }
+
+    public static int GetValue(string value, string[] types)
+    {
+        foreach (var type in types)
         {
+            var ret = -1;
+            var flag = true;
             try
             {
-                return (T)Enum.Parse(typeof(T), value);
+                ret = (int)Enum.Parse(Type.GetType($"Table.{type}"), value); 
             }
             catch
             {
-                Debug.LogError($"{value} is not a [{typeof(T).Name}].");
+                flag = false;
+            }
+            if (flag)
+            {
+                return ret;
             }
         }
-
-        return default;
+        Debug.LogError($"{value} is not in [{types}].");
+        return -1;
     }
 }
