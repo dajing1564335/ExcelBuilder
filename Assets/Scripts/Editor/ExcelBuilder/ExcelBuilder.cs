@@ -156,11 +156,13 @@ public class ExcelBuilder
         public string[] Type;
         public string Name;
         public int ListCount = 0;
+        public bool IsBaseType;
 
-        public Field(string[] type, string name)
+        public Field(string[] type, string name, bool isBaseType)
         {
             Type = type;
             Name = name;
+            IsBaseType = isBaseType;
         }
     }
 
@@ -272,9 +274,10 @@ public class ExcelBuilder
                         Debug.LogError($"Table has empty type or field! [{fileInfos[index].Name}]");
                     }
                     var typeList = type.Split(';');
+                    var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
                     if (typeList.Length == 1)
                     {
-                        if (!TypeConvert.SupportType.Contains(typeList[0]) && !folderNames.Contains(typeList[0]))
+                        if (!isBaseType && !folderNames.Contains(typeList[0]))
                         {
                             Debug.LogError($"There are not support type! [{typeList[0]}]");
                             return;
@@ -291,7 +294,7 @@ public class ExcelBuilder
                             }
                         }
                     }
-                    fields.Add(new Field(typeList, table.Rows[1][i].ToString()));
+                    fields.Add(new Field(typeList, table.Rows[1][i].ToString(), isBaseType));
                 }
                 if (listCount > 0)
                 {
@@ -306,11 +309,9 @@ public class ExcelBuilder
                 }
 
                 CreateTableDataClass(tableName, fields);
+                CreateTableSO(tableName, fields);
 
-                var dic = table.Rows[0][0].ToString() == "dic";
-                CreateTableSO(tableName, fields, dic);
-
-                classInfos.Add(new ClassInfo(tableName, dic));
+                classInfos.Add(new ClassInfo(tableName, table.Rows[0][0].ToString() == "dic"));
             }
         }
         CreateTableAccessor(classInfos);
@@ -379,7 +380,7 @@ public class ExcelBuilder
     {
         Func<Field, string> GetType = (field) =>
         {
-            var type = field.Type.Length == 1 && TypeConvert.SupportType.Contains(field.Type[0]) ? field.Type[0] : "int";
+            var type = field.IsBaseType ? field.Type[0] : "int";
             return field.ListCount == 0 ? type : $"List<{type}>";
         };
 
@@ -417,23 +418,23 @@ public class ExcelBuilder
         File.WriteAllText(folder + name + "Data.cs", code.ToString());
     }
 
-    private static void CreateTableSO(string name, List<Field> fields, bool isDic = false)
+    private static void CreateTableSO(string name, List<Field> fields)
     {
-        Func<string, Field, string> GetTableEnumValue = (j, field) =>
+        Func<Field, string> GetTypes = (field) =>
         {
             var ret = new StringBuilder();
-            ret.Append($"TypeConvert.GetValue(table.Rows[i][{j}].ToString(), new string[] {{ ");
-            foreach (var type in field.Type)
+            ret.Append($"new string[] {{\"{field.Type[0]}\"");
+            for (int i = 1; i < field.Type.Length; ++i)
             {
-                ret.Append($"\"{type}\", ");
+                ret.Append($", \"{field.Type[i]}\"");
             }
-            ret.Append("})");
+            ret.Append("}");
             return ret.ToString();
         };
 
         Func<Field, int, string> GetFieldValue = (field, index) =>
         {
-            if (field.Type.Length == 1 && TypeConvert.SupportType.Contains(field.Type[0]))
+            if (field.IsBaseType)
             {
                 return field.ListCount == 0
                     ? $"\t\t\t\tTypeConvert.GetValue<{field.Type[0]}>(table.Rows[i][{index}].ToString())"
@@ -442,7 +443,7 @@ public class ExcelBuilder
             else
             {
                 return field.ListCount == 0
-                    ? $"\t\t\t\t{GetTableEnumValue(index.ToString(), field)}"
+                    ? $"\t\t\t\tTypeConvert.GetValue(table.Rows[i][{index}].ToString(), {GetTypes(field)})"
                     : $"\t\t\t\tnew List<int>()";
             }
         };
@@ -460,13 +461,10 @@ public class ExcelBuilder
         code.AppendLine($"\t\tDatas = new List<{name}Data>();");
         code.AppendLine("\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t{");
-        if (isDic)
-        {
-            code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull)");
-            code.AppendLine("\t\t\t{");
-            code.AppendLine("\t\t\t\tcontinue;");
-            code.AppendLine("\t\t\t}");
-        }
+        code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull)");
+        code.AppendLine("\t\t\t{");
+        code.AppendLine("\t\t\t\tcontinue;");
+        code.AppendLine("\t\t\t}");
         code.AppendLine($"\t\t\tvar data = new {name}Data(");
         int index = 0;
         for (int i = 0; i < fields.Count - 1; ++i)
@@ -478,18 +476,29 @@ public class ExcelBuilder
         code.AppendLine(GetFieldValue(fields[fields.Count - 1], index));
         code.AppendLine("\t\t\t\t);");
         index = 0;
+        var firstList = true;
         foreach (var field in fields)
         {
             index++;
             if (field.ListCount > 0)
             {
+                if (!field.IsBaseType)
+                {
+                    code.Append("\t\t\t");
+                    if (firstList)
+                    {
+                        code.Append("var ");
+                        firstList = false;
+                    }
+                    code.AppendLine($"types = {GetTypes(field)};");
+                }
                 code.AppendLine($"\t\t\tfor (int j = {index + 1}; j < {index + field.ListCount + 1}; j++)");
                 code.AppendLine("\t\t\t{");
                 code.AppendLine("\t\t\t\tif (table.Rows[i][j] is System.DBNull)");
                 code.AppendLine("\t\t\t\t{");
                 code.AppendLine("\t\t\t\t\tbreak;");
                 code.AppendLine("\t\t\t\t}");
-                code.AppendLine($"\t\t\t\tdata.{field.Name}.Add({(TypeConvert.SupportType.Contains(field.Type[0]) ? $"TypeConvert.GetValue<{field.Type[0]}>(table.Rows[i][j].ToString())" : GetTableEnumValue("j", field))});");
+                code.AppendLine($"\t\t\t\tdata.{field.Name}.Add({(field.IsBaseType ? $"TypeConvert.GetValue<{field.Type[0]}>(table.Rows[i][j].ToString())" : "TypeConvert.GetValue(table.Rows[i][j].ToString(), types)")});");
                 code.AppendLine("\t\t\t}");
                 index += field.ListCount;
             }
@@ -512,7 +521,7 @@ public class ExcelBuilder
         {
             if (info.IsDic)
             {
-                code.AppendLine($"\tpublic static TableAccessorDictionary<{info.Name}, {info.Name}Data> {info.Name};");
+                code.AppendLine($"\tpublic static TableAccessorDictionary<{info.Name}Data> {info.Name};");
             }
             else
             {
@@ -526,7 +535,7 @@ public class ExcelBuilder
         {
             if (info.IsDic)
             {
-                code.AppendLine($"\t\t{info.Name} = new TableAccessorDictionary<{info.Name}, {info.Name}Data>();");
+                code.AppendLine($"\t\t{info.Name} = new TableAccessorDictionary<{info.Name}Data>();");
             }
             else
             {
@@ -567,7 +576,7 @@ public class ExcelBuilder
 
             foreach (DataTable table in tables)
             {
-                if (table.Columns.Count < 2 || table.Rows.Count < 3)
+                if (table.Columns.Count < 2 || table.Rows.Count < 3 || table.Rows[0][0].ToString() == "enum")
                 {
                     continue;
                 }
