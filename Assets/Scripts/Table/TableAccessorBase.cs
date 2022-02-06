@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TableAccessorDictionary<T>
+public class TableAccessorBase<T, V>
 {
     private Dictionary<int, T> _data;
 
-    public TableAccessorDictionary()
+    public TableAccessorBase()
     {
         var data = Resources.Load<ScriptableObjectBase>($"ExcelData/{typeof(T).Name}");
         if (!data)
@@ -23,5 +23,15 @@ public class TableAccessorDictionary<T>
         }
     }
 
-    public T this[int label] => _data[label];
+    public T this[int index] => _data[index];
+
+    public T this[V label] => _data[(int)(object)label];
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        foreach (var data in _data.Values)
+        {
+            yield return data;
+        }
+    }
 }

@@ -166,18 +166,6 @@ public class ExcelBuilder
         }
     }
 
-    struct ClassInfo
-    {
-        public string Name;
-        public bool IsDic;
-
-        public ClassInfo(string name, bool isDic)
-        {
-            Name = name;
-            IsDic = isDic;
-        }
-    }
-
     static string GetTableName(string name, string table0Name, string fileName)
     {
         return (name == "Sheet1" && name == table0Name) ? fileName.Replace(".xlsx", string.Empty) : name;
@@ -204,7 +192,7 @@ public class ExcelBuilder
             
             foreach (DataTable table in tables)
             {
-                if (table.Columns.Count < 1 || table.Rows.Count < 3 || table.Rows[0][0].ToString() == "list")
+                if (table.Columns.Count < 1 || table.Rows.Count < 3)
                 {
                     continue;
                 }
@@ -224,20 +212,20 @@ public class ExcelBuilder
                     labels.Add(label);
                 }
                 var folderName = GetTableName(table.TableName, tables[0].TableName, file.Name);
-                CreateTableEnum(folderName, labels, table.Rows[0][0].ToString() == "dic");
+                CreateTableEnum(folderName, labels, table.Rows[0][0].ToString() == "ref");
 
                 folderNames.Add(folderName);
             }
         }
       
         //CreateDataClass
-        List<ClassInfo> classInfos = new List<ClassInfo>();
+        List<string> classNames = new List<string>();
 
         for (int index = 0; index < fileInfos.Length; ++index)
         {
             foreach (DataTable table in excelData[index])
             {
-                if (table.Columns.Count < 2 || table.Rows.Count < 2 || table.Rows[0][0].ToString() == "enum")
+                if (table.Columns.Count < 2 || table.Rows.Count < 2)
                 {
                     continue;
                 }
@@ -311,10 +299,10 @@ public class ExcelBuilder
                 CreateTableDataClass(tableName, fields);
                 CreateTableSO(tableName, fields);
 
-                classInfos.Add(new ClassInfo(tableName, table.Rows[0][0].ToString() == "dic"));
+                classNames.Add(tableName);
             }
         }
-        CreateTableAccessor(classInfos);
+        CreateTableAccessor(classNames);
 
         var builderData = Resources.Load<ExcelBuilderSO>("Temp/ExcelBuilderData");
         if (!builderData)
@@ -331,13 +319,13 @@ public class ExcelBuilder
         Debug.Log("Build table end. Wait refresh.");
     }
 
-    private static void CreateTableEnum(string name, List<string> labels, bool isDic)
+    private static void CreateTableEnum(string name, List<string> labels, bool needRef)
     {
         var folder = TableFolder + name + "/";
         Directory.CreateDirectory(folder);
 
         LabelRefSO tabelRef = default;
-        if (isDic)
+        if (needRef)
         {
             var fileName = name + "Ref";
             tabelRef = Resources.Load<LabelRefSO>($"Temp/{fileName}");
@@ -355,7 +343,7 @@ public class ExcelBuilder
         code.AppendLine("\t{");
         foreach (var field in labels)
         {
-            if (isDic)
+            if (needRef)
             {
                 code.AppendLine($"\t\t{field} = {tabelRef.AddLabel(field)},");
             }
@@ -367,7 +355,7 @@ public class ExcelBuilder
         code.AppendLine("\t}");
         code.AppendLine("}");
 
-        if (isDic)
+        if (needRef)
         {
             EditorUtility.SetDirty(tabelRef);
             AssetDatabase.SaveAssets();
@@ -510,37 +498,23 @@ public class ExcelBuilder
         File.WriteAllText(TableFolder + name + "/" + name + "SO.cs", code.ToString());
     }
 
-    private static void CreateTableAccessor(List<ClassInfo> infos)
+    private static void CreateTableAccessor(List<string> names)
     {
         var code = new StringBuilder();
         code.AppendLine("using Table;");
         code.AppendLine();
         code.AppendLine("public static class TableAccessor");
         code.AppendLine("{");
-        foreach (var info in infos)
+        foreach (var name in names)
         {
-            if (info.IsDic)
-            {
-                code.AppendLine($"\tpublic static TableAccessorDictionary<{info.Name}Data> {info.Name};");
-            }
-            else
-            {
-                code.AppendLine($"\tpublic static TableAccessorList<{info.Name}Data> {info.Name};");
-            }
+            code.AppendLine($"\tpublic static TableAccessorBase<{name}Data, {name}> {name};");
         }
         code.AppendLine();
         code.AppendLine("\tpublic static void LoadData()");
         code.AppendLine("\t{");
-        foreach (var info in infos)
+        foreach (var name in names)
         {
-            if (info.IsDic)
-            {
-                code.AppendLine($"\t\t{info.Name} = new TableAccessorDictionary<{info.Name}Data>();");
-            }
-            else
-            {
-                code.AppendLine($"\t\t{info.Name} = new TableAccessorList<{info.Name}Data>();");
-            }
+            code.AppendLine($"\t\t{name} = new TableAccessorBase<{name}Data, {name}>();");
         }
         code.AppendLine("\t}");
         code.AppendLine("}");
@@ -576,7 +550,7 @@ public class ExcelBuilder
 
             foreach (DataTable table in tables)
             {
-                if (table.Columns.Count < 2 || table.Rows.Count < 3 || table.Rows[0][0].ToString() == "enum")
+                if (table.Columns.Count < 2 || table.Rows.Count < 3)
                 {
                     continue;
                 }
