@@ -16,7 +16,7 @@ public class TableAccessorBase<T, V>
         }
         _data = new Dictionary<int, T>();
         var datas = (List<T>)data.GetType().GetField("Datas").GetValue(data);
-        var msglabels = (int[])Enum.GetValues(typeof(T));
+        var msglabels = (int[])Enum.GetValues(typeof(V));
         for (int i = 0; i < datas.Count; i++)
         {
             _data.Add(msglabels[i], datas[i]);
