@@ -67,17 +67,17 @@ public static class TypeConvert
             }
         }
 
-        //if (typeof(T).IsEnum)
-        //{
-        //    try
-        //    {
-        //        return (T)Enum.Parse(typeof(T), value);
-        //    }
-        //    catch
-        //    {
-        //        Debug.LogError($"{value} is not a [{typeof(T).Name}].");
-        //    }
-        //}
+        if (typeof(T).IsEnum)
+        {
+            try
+            {
+                return (T)Enum.Parse(typeof(T), value);
+            }
+            catch
+            {
+                Debug.LogError($"{value} is not a [{typeof(T).Name}].");
+            }
+        }
 
         return default;
     }
