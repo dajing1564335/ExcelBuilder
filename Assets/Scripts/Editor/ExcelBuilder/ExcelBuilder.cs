@@ -11,7 +11,7 @@ public class ExcelBuilder
 {
     static string MessageFolder = Application.dataPath + "/Scripts/Message/";
     public static string TableFolder = Application.dataPath + "/Scripts/Table/";
-    public static string RefFolder = Application.dataPath + "/Resources/Temp/";
+    public static string RefFolder = Application.dataPath + "/Resources/Ref/";
     public static string DataFolder = Application.dataPath + "/Resources/ExcelData/";
 
     static string MsgExcelPath = Application.dataPath.Replace("Assets", "Data/Message/Message.xlsx");
@@ -127,11 +127,11 @@ public class ExcelBuilder
 
     private static void CreateMsgLabel(List<string> msgLabels)
     {
-        var msgRef = Resources.Load<LabelRefSO>("Temp/MsgRef");
+        var msgRef = Resources.Load<LabelRefSO>("Ref/MsgRef");
         if (!msgRef)
         {
             msgRef = ScriptableObject.CreateInstance<LabelRefSO>();
-            AssetDatabase.CreateAsset(msgRef, "Assets/Resources/Temp/MsgRef.asset");
+            AssetDatabase.CreateAsset(msgRef, "Assets/Resources/Ref/MsgRef.asset");
         }
 
         var code = new StringBuilder();
@@ -304,11 +304,11 @@ public class ExcelBuilder
         }
         CreateTableAccessor(classNames);
 
-        var builderData = Resources.Load<ExcelBuilderSO>("Temp/ExcelBuilderData");
+        var builderData = Resources.Load<ExcelBuilderSO>("Ref/ExcelBuilderData");
         if (!builderData)
         {
             builderData = ScriptableObject.CreateInstance<ExcelBuilderSO>();
-            AssetDatabase.CreateAsset(builderData, "Assets/Resources/Temp/ExcelBuilderData.asset");
+            AssetDatabase.CreateAsset(builderData, "Assets/Resources/Ref/ExcelBuilderData.asset");
         }
         builderData.Updata(folderNames);
         builderData.NeedRebuild = true;
@@ -328,11 +328,11 @@ public class ExcelBuilder
         if (needRef)
         {
             var fileName = name + "Ref";
-            tabelRef = Resources.Load<LabelRefSO>($"Temp/{fileName}");
+            tabelRef = Resources.Load<LabelRefSO>($"Ref/{fileName}");
             if (!tabelRef)
             {
                 tabelRef = ScriptableObject.CreateInstance<LabelRefSO>();
-                AssetDatabase.CreateAsset(tabelRef, $"Assets/Resources/Temp/{fileName}.asset");
+                AssetDatabase.CreateAsset(tabelRef, $"Assets/Resources/Ref/{fileName}.asset");
             }
         }
 
@@ -438,22 +438,21 @@ public class ExcelBuilder
         var code = new StringBuilder();
         code.AppendLine("using System.Collections.Generic;");
         code.AppendLine("using System.Data;");
-        code.AppendLine("using Table;");
         code.AppendLine();
         code.AppendLine($"public class {name}SO : ScriptableObjectBase");
         code.AppendLine("{");
-        code.AppendLine($"\tpublic List<{name}Data> Datas;");
+        code.AppendLine($"\tpublic List<Table.{name}Data> Datas;");
         code.AppendLine();
         code.AppendLine("\tpublic override void CreateData(DataTable table)");
         code.AppendLine("\t{");
-        code.AppendLine($"\t\tDatas = new List<{name}Data>();");
+        code.AppendLine($"\t\tDatas = new List<Table.{name}Data>();");
         code.AppendLine("\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t{");
         code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull)");
         code.AppendLine("\t\t\t{");
         code.AppendLine("\t\t\t\tcontinue;");
         code.AppendLine("\t\t\t}");
-        code.AppendLine($"\t\t\tvar data = new {name}Data(");
+        code.AppendLine($"\t\t\tvar data = new Table.{name}Data(");
         int index = 0;
         for (int i = 0; i < fields.Count - 1; ++i)
         {
@@ -501,20 +500,18 @@ public class ExcelBuilder
     private static void CreateTableAccessor(List<string> names)
     {
         var code = new StringBuilder();
-        code.AppendLine("using Table;");
-        code.AppendLine();
         code.AppendLine("public static class TableAccessor");
         code.AppendLine("{");
         foreach (var name in names)
         {
-            code.AppendLine($"\tpublic static TableAccessorBase<{name}Data, {name}> {name};");
+            code.AppendLine($"\tpublic static TableAccessorBase<Table.{name}Data, Table.{name}> {name};");
         }
         code.AppendLine();
         code.AppendLine("\tpublic static void LoadData()");
         code.AppendLine("\t{");
         foreach (var name in names)
         {
-            code.AppendLine($"\t\t{name} = new TableAccessorBase<{name}Data, {name}>();");
+            code.AppendLine($"\t\t{name} = new TableAccessorBase<Table.{name}Data, Table.{name}>();");
         }
         code.AppendLine("\t}");
         code.AppendLine("}");
@@ -526,7 +523,7 @@ public class ExcelBuilder
     [MenuItem("ExcelBuilder/LoadTableData")]
     static void CreateDataAssets()
     {
-        var builderData = Resources.Load<ExcelBuilderSO>($"Temp/ExcelBuilderData");
+        var builderData = Resources.Load<ExcelBuilderSO>($"Ref/ExcelBuilderData");
         if (!builderData)
         {
             Debug.LogError("Please build first.");
@@ -576,7 +573,7 @@ public class ExcelBuilder
     [InitializeOnLoadMethod]
     public static void OnLoadMethod()
     {
-        var builderData = Resources.Load<ExcelBuilderSO>($"Temp/ExcelBuilderData");
+        var builderData = Resources.Load<ExcelBuilderSO>($"Ref/ExcelBuilderData");
         if (!builderData || builderData.NeedRebuild == false)
         {
             return;
