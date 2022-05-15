@@ -19,6 +19,7 @@ public class ExcelBuilder
 
     private static void CreateFolder()
     {
+        Directory.CreateDirectory(TableFolder);
         Directory.CreateDirectory(RefFolder);
         Directory.CreateDirectory(DataFolder);
     }
@@ -206,6 +207,18 @@ public class ExcelBuilder
         return (name == "Sheet1" && name == table0Name) ? fileName.Replace(".xlsx", string.Empty) : name;
     }
 
+    struct ClassInfo
+    {
+        public string Name;
+        public bool Dic;
+
+        public ClassInfo(string name, bool dic)
+        {
+            Name = name;
+            Dic = dic;
+        }
+    }
+
     [MenuItem("ExcelBuilder/BuildTableAndLoad")]
     private static void BuildTables()
     {
@@ -227,7 +240,7 @@ public class ExcelBuilder
             
             foreach (DataTable table in tables)
             {
-                if (table.Columns.Count < 1 || table.Rows.Count < 3)
+                if (table.Columns.Count == 0 || table.Rows.Count < 3)
                 {
                     continue;
                 }
@@ -254,7 +267,8 @@ public class ExcelBuilder
         }
       
         //CreateDataClass
-        List<string> classNames = new List<string>();
+        
+        List<ClassInfo> classInfos = new List<ClassInfo>();
 
         for (int index = 0; index < fileInfos.Length; ++index)
         {
@@ -332,12 +346,13 @@ public class ExcelBuilder
                 }
 
                 CreateTableDataClass(tableName, fields);
-                CreateTableSO(tableName, fields);
+                var dic = table.Rows[0][0].ToString() == "ref";
+                CreateTableSO(tableName, fields, dic);
 
-                classNames.Add(tableName);
+                classInfos.Add(new ClassInfo(tableName, dic));
             }
         }
-        CreateTableAccessor(classNames);
+        CreateTableAccessor(classInfos);
 
         var builderData = Resources.Load<ExcelBuilderSO>("Ref/ExcelBuilderData");
         if (!builderData)
@@ -376,25 +391,24 @@ public class ExcelBuilder
         code.AppendLine("{");
         code.AppendLine($"\tpublic enum {name}");
         code.AppendLine("\t{");
-        foreach (var field in labels)
+        if (needRef)
         {
-            if (needRef)
+            foreach (var field in labels)
             {
                 code.AppendLine($"\t\t{field} = {tabelRef.GetId(field)},");
             }
-            else
+            EditorUtility.SetDirty(tabelRef);
+            AssetDatabase.SaveAssets();
+        }
+        else
+        {
+            foreach (var field in labels)
             {
                 code.AppendLine($"\t\t{field},");
             }
         }
         code.AppendLine("\t}");
         code.AppendLine("}");
-
-        if (needRef)
-        {
-            EditorUtility.SetDirty(tabelRef);
-            AssetDatabase.SaveAssets();
-        }
 
         File.WriteAllText(folder + name + ".cs", code.ToString());
     }
@@ -441,7 +455,7 @@ public class ExcelBuilder
         File.WriteAllText(folder + name + "Data.cs", code.ToString());
     }
 
-    private static void CreateTableSO(string name, List<Field> fields)
+    private static void CreateTableSO(string name, List<Field> fields, bool needRef)
     {
         Func<Field, string> GetTypes = (field) =>
         {
@@ -476,11 +490,12 @@ public class ExcelBuilder
         code.AppendLine();
         code.AppendLine($"public class {name}SO : ScriptableObjectBase");
         code.AppendLine("{");
-        code.AppendLine($"\tpublic List<Table.{name}Data> Datas;");
+        var type = (needRef ? $"SerializableDictionary<Table.{name}, " : "List<") + $"Table.{name}Data>";
+        code.AppendLine($"\tpublic {type} Datas;");
         code.AppendLine();
         code.AppendLine("\tpublic override void CreateData(DataTable table)");
         code.AppendLine("\t{");
-        code.AppendLine($"\t\tDatas = new List<Table.{name}Data>();");
+        code.AppendLine($"\t\tDatas = new {type}();");
         code.AppendLine("\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t{");
         code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull)");
@@ -525,28 +540,33 @@ public class ExcelBuilder
                 index += field.ListCount;
             }
         }
-        code.AppendLine("\t\t\tDatas.Add(data);");
+        code.Append("\t\t\tDatas.Add(");
+        if (needRef)
+        {
+            code.Append($"(Table.{name})System.Enum.Parse(typeof(Table.{name}), table.Rows[i][0].ToString()), ");
+        }
+        code.AppendLine("data);");
         code.AppendLine("\t\t}");
         code.AppendLine("\t}");
         code.AppendLine("}");
         File.WriteAllText(TableFolder + name + "/" + name + "SO.cs", code.ToString());
     }
 
-    private static void CreateTableAccessor(List<string> names)
+    private static void CreateTableAccessor(List<ClassInfo> infos)
     {
         var code = new StringBuilder();
         code.AppendLine("public static class TableAccessor");
         code.AppendLine("{");
-        foreach (var name in names)
+        foreach (var info in infos)
         {
-            code.AppendLine($"\tpublic static TableAccessorBase<Table.{name}Data, Table.{name}> {name};");
+            code.AppendLine($"\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data> {info.Name};");
         }
         code.AppendLine();
         code.AppendLine("\tpublic static void LoadData()");
         code.AppendLine("\t{");
-        foreach (var name in names)
+        foreach (var info in infos)
         {
-            code.AppendLine($"\t\t{name} = new TableAccessorBase<Table.{name}Data, Table.{name}>();");
+            code.AppendLine($"\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data>();");
         }
         code.AppendLine("\t}");
         code.AppendLine("}");

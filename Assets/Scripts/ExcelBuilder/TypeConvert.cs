@@ -101,7 +101,14 @@ public static class TypeConvert
                 return ret;
             }
         }
-        Debug.LogError($"{value} is not in [{types}].");
+        var log = new System.Text.StringBuilder();
+        log.Append($"[{value}] is not in [{types[0]}");
+        for (int i = 1; i < types.Length; i++)
+        {
+            log.Append($",{types[i]}");
+        }
+        log.AppendLine("].");
+        Debug.LogError(log);
         return -1;
     }
 }
