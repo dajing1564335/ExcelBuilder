@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 public static class MsgAccessor
 {   
@@ -14,13 +13,7 @@ public static class MsgAccessor
             Debug.LogError("No data! Please build data first.");
             return;
         }
-        _data = new Dictionary<MsgLabel, string>();
-        var datas = data.MsgDatas[(int)language].Datas;
-        var msglabels = (MsgLabel[])Enum.GetValues(typeof(MsgLabel));
-        for (int i = 0; i < datas.Length; i++)
-        {
-            _data.Add(msglabels[i], datas[i]);
-        }
+        _data = new Dictionary<MsgLabel, string>(data.MsgDatas[language]);
     }
 
     public static string GetMessage(MsgLabel msgId)

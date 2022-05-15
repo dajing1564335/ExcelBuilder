@@ -1,36 +1,20 @@
-using System.Collections.Generic;
 using UnityEngine;
-using System;
-
-[Serializable]
-public struct LabelRefData
-{
-    public string Label;
-    public int Id;
-
-    public LabelRefData(string label, int id)
-    {
-        Label = label;
-        Id = id;
-    }
-}
 
 public class LabelRefSO : ScriptableObject
 {
-    public List<LabelRefData> Label = new List<LabelRefData>();
+    public SerializableDictionary<string, int> LabelRef = new SerializableDictionary<string, int>();
     public int MaxId = 0;
 
-    public int AddLabel(string label)
+    public int GetId(string label)
     {
-        var find = Label.Find(e => e.Label == label);
-        if (find.Label == null)
+        if (LabelRef.TryGetValue(label, out var id))
         {
-            Label.Add(new LabelRefData(label, MaxId));
-            return MaxId++;
+            return id;
         }
         else
         {
-            return find.Id;
+            LabelRef.Add(label, MaxId);
+            return MaxId++;
         }
     }
 }

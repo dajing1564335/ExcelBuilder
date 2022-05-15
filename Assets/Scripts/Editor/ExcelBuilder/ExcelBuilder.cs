@@ -96,19 +96,18 @@ public class ExcelBuilder
         CreateLanguage(languages);
         CreateMsgLabel(msgLabels);
 
-        //CreateMsgData
-        var msgData = Resources.Load<MessageSO>("ExcelData/MsgData");
-        if (!msgData)
+        var builderData = Resources.Load<ExcelBuilderSO>("Ref/ExcelBuilderData");
+        if (!builderData)
         {
-            msgData = ScriptableObject.CreateInstance<MessageSO>();
-            AssetDatabase.CreateAsset(msgData, "Assets/Resources/ExcelData/MsgData.asset");
+            builderData = ScriptableObject.CreateInstance<ExcelBuilderSO>();
+            AssetDatabase.CreateAsset(builderData, "Assets/Resources/Ref/ExcelBuilderData.asset");
         }
-        msgData.CreateData(tables, msgLabels.Count);
-        EditorUtility.SetDirty(msgData);
+        builderData.LoadMsgData = true;
+        EditorUtility.SetDirty(builderData);
         AssetDatabase.SaveAssets();
 
         AssetDatabase.Refresh();
-        Debug.Log("Msg build and load end.");
+        Debug.Log("Build msg end. Wait refresh.");
     }
 
     private static void CreateLanguage(string[] languages)
@@ -139,7 +138,7 @@ public class ExcelBuilder
         code.AppendLine("{");
         foreach (var label in msgLabels)
         {
-            code.AppendLine($"\t{label} = {msgRef.AddLabel(label)},");
+            code.AppendLine($"\t{label} = {msgRef.GetId(label)},");
         }
         code.AppendLine("}");
 
@@ -147,6 +146,42 @@ public class ExcelBuilder
         AssetDatabase.SaveAssets();
 
         File.WriteAllText(MessageFolder + "MsgLabel.cs", code.ToString());
+    }
+
+    [MenuItem("ExcelBuilder/LoadMsgData")]
+    private static void CreateMsgData()
+    {
+        var builderData = Resources.Load<ExcelBuilderSO>($"Ref/ExcelBuilderData");
+        if (!builderData)
+        {
+            Debug.LogError("Please build first.");
+            return;
+        }
+        if (builderData.LoadMsgData)
+        {
+            builderData.LoadMsgData = false;
+            EditorUtility.SetDirty(builderData);
+            AssetDatabase.SaveAssets();
+        }
+
+        var steam = File.OpenRead(MsgExcelPath);
+        var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
+        var tables = reader.AsDataSet().Tables;
+        reader.Close();
+        steam.Close();
+
+        var msgData = Resources.Load<MessageSO>("ExcelData/MsgData");
+        if (!msgData)
+        {
+            msgData = ScriptableObject.CreateInstance<MessageSO>();
+            AssetDatabase.CreateAsset(msgData, "Assets/Resources/ExcelData/MsgData.asset");
+        }
+        msgData.CreateData(tables);
+        EditorUtility.SetDirty(msgData);
+        AssetDatabase.SaveAssets();
+
+        AssetDatabase.Refresh();
+        Debug.Log("Load msg data end.");
     }
     #endregion
 
@@ -311,7 +346,7 @@ public class ExcelBuilder
             AssetDatabase.CreateAsset(builderData, "Assets/Resources/Ref/ExcelBuilderData.asset");
         }
         builderData.Updata(folderNames);
-        builderData.NeedRebuild = true;
+        builderData.LoadTableData = true;
         EditorUtility.SetDirty(builderData);
         AssetDatabase.SaveAssets();
 
@@ -345,7 +380,7 @@ public class ExcelBuilder
         {
             if (needRef)
             {
-                code.AppendLine($"\t\t{field} = {tabelRef.AddLabel(field)},");
+                code.AppendLine($"\t\t{field} = {tabelRef.GetId(field)},");
             }
             else
             {
@@ -521,7 +556,7 @@ public class ExcelBuilder
 
 
     [MenuItem("ExcelBuilder/LoadTableData")]
-    static void CreateDataAssets()
+    static void CreateTableData()
     {
         var builderData = Resources.Load<ExcelBuilderSO>($"Ref/ExcelBuilderData");
         if (!builderData)
@@ -529,9 +564,9 @@ public class ExcelBuilder
             Debug.LogError("Please build first.");
             return;
         }
-        if (builderData.NeedRebuild)
+        if (builderData.LoadTableData)
         {
-            builderData.NeedRebuild = false;
+            builderData.LoadTableData = false;
             EditorUtility.SetDirty(builderData);
             AssetDatabase.SaveAssets();
         }
@@ -568,20 +603,27 @@ public class ExcelBuilder
         }
         Debug.Log("Load table data end.");
     }
-
+    #endregion
 
     [InitializeOnLoadMethod]
     public static void OnLoadMethod()
     {
         var builderData = Resources.Load<ExcelBuilderSO>($"Ref/ExcelBuilderData");
-        if (!builderData || builderData.NeedRebuild == false)
+        if (!builderData || !(builderData.LoadMsgData || builderData.LoadTableData))
         {
             return;
         }
-        builderData.NeedRebuild = false;
+        if (builderData.LoadMsgData)
+        {
+            builderData.LoadMsgData = false;
+            CreateMsgData();
+        }
+        if (builderData.LoadTableData)
+        {
+            builderData.LoadMsgData = false;
+            CreateTableData();
+        }
         EditorUtility.SetDirty(builderData);
         AssetDatabase.SaveAssets();
-        CreateDataAssets();
     }
-    #endregion
 }

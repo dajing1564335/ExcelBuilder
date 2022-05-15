@@ -4,7 +4,8 @@ using System.IO;
 
 public class ExcelBuilderSO : ScriptableObject
 {
-    public bool NeedRebuild;
+    public bool LoadMsgData;
+    public bool LoadTableData;
     public List<string> EnumNames = new List<string>();
 
     public void Updata(List<string> names)
