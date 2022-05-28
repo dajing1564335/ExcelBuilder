@@ -247,7 +247,7 @@ public class ExcelBuilder
                 var labels = new List<string>();
                 for (int i = 2; i < table.Rows.Count; i++)
                 {
-                    if (table.Rows[i][0] is DBNull)
+                    if (table.Rows[i][0] is DBNull || table.Rows[i][0].ToString() == "comment")
                     {
                         continue;
                     }
@@ -430,7 +430,7 @@ public class ExcelBuilder
         code.AppendLine("namespace Table");
         code.AppendLine("{");
         code.AppendLine("\t[System.Serializable]");
-        code.AppendLine($"\tpublic struct {name}Data");
+        code.AppendLine($"\tpublic class {name}Data");
         code.AppendLine("\t{");
         foreach (var field in fields)
         {
