@@ -498,7 +498,7 @@ public class ExcelBuilder
         code.AppendLine($"\t\tDatas = new {type}();");
         code.AppendLine("\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t{");
-        code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull)");
+        code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull || table.Rows[i][0].ToString() == \"comment\")");
         code.AppendLine("\t\t\t{");
         code.AppendLine("\t\t\t\tcontinue;");
         code.AppendLine("\t\t\t}");
