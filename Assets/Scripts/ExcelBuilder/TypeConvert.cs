@@ -82,9 +82,9 @@ public static class TypeConvert
         return default;
     }
 
-    public static int GetValue(string value, string[] types)
+    public static int GetValue(string value, string types)
     {
-        foreach (var type in types)
+        foreach (var type in types.Split(";"))
         {
             var ret = -1;
             var flag = true;
@@ -101,14 +101,7 @@ public static class TypeConvert
                 return ret;
             }
         }
-        var log = new System.Text.StringBuilder();
-        log.Append($"[{value}] is not in [{types[0]}");
-        for (int i = 1; i < types.Length; i++)
-        {
-            log.Append($",{types[i]}");
-        }
-        log.AppendLine("].");
-        Debug.LogError(log);
+        Debug.LogError($"[{value}] is not in [{types}]");
         return -1;
     }
 }
