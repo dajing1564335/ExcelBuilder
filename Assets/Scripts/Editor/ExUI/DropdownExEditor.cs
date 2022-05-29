@@ -6,7 +6,7 @@ using System;
 [CustomEditor(typeof(DropdownEx))]
 public class DropdownExEditor : Editor
 {
-    static Array MsgIdArray = Enum.GetValues(typeof(MsgLabel));
+    static readonly Array MsgIdArray = Enum.GetValues(typeof(MsgLabel));
 
     public override void OnInspectorGUI()
     {
@@ -18,11 +18,11 @@ public class DropdownExEditor : Editor
         }
 
         var dropdownEx = (DropdownEx)target;
-        var msgIds = serializedObject.FindProperty("_msgIds");
-        List<string> strings = new List<string>();
-        for(int i = 0; i < msgIds.arraySize; ++i)
+        var labels = serializedObject.FindProperty("_labels");
+        List<string> strings = new();
+        for (int i = 0; i < labels.arraySize; ++i)
         {
-            strings.Add(MsgAccessor.GetMessage((MsgLabel)MsgIdArray.GetValue(msgIds.GetArrayElementAtIndex(i).enumValueIndex)));
+            strings.Add(MsgAccessor.GetMessage((MsgLabel)MsgIdArray.GetValue(labels.GetArrayElementAtIndex(i).enumValueIndex)));
         }
         dropdownEx.ClearOptions();
         dropdownEx.AddOptions(strings);
