@@ -9,13 +9,13 @@ using System.Text;
 
 public class ExcelBuilder
 {
-    static string MessageFolder = Application.dataPath + "/Scripts/Message/";
+    static readonly string MessageFolder = Application.dataPath + "/Scripts/Message/";
     public static string TableFolder = Application.dataPath + "/Scripts/Table/";
     public static string RefFolder = Application.dataPath + "/Resources/Ref/";
     public static string DataFolder = Application.dataPath + "/Resources/ExcelData/";
 
-    static string MsgExcelPath = Application.dataPath.Replace("Assets", "Data/Message/Message.xlsx");
-    static string TableExcelFolder = Application.dataPath.Replace("Assets", "Data/Table/");
+    static readonly string MsgExcelPath = Application.dataPath.Replace("Assets", "Data/Message/Message.xlsx");
+    static readonly string TableExcelFolder = Application.dataPath.Replace("Assets", "Data/Table/");
 
     private static void CreateFolder()
     {
@@ -233,7 +233,7 @@ public class ExcelBuilder
         List<string> folderNames = new();
         List<DataTableCollection> excelData = new();
 
-        var fileInfos = Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx");
+        var fileInfos = Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
         foreach (var file in fileInfos)
         {
             //LoadData
