@@ -686,7 +686,7 @@ public class ExcelBuilder
             AssetDatabase.SaveAssets();
         }
 
-        foreach (var file in Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx"))
+        foreach (var file in Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories))
         {
             //LoadData
             var steam = File.OpenRead(file.FullName);
