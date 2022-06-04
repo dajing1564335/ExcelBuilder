@@ -464,7 +464,7 @@ public class ExcelBuilder
         var code = new StringBuilder();
         code.AppendLine("namespace Table");
         code.AppendLine("{");
-        code.AppendLine($"\tpublic enum {name}");
+        code.AppendLine($"\tpublic enum {name}Enum");
         code.AppendLine("\t{");
         if (needRef)
         {
@@ -585,7 +585,7 @@ public class ExcelBuilder
         code.AppendLine();
         code.AppendLine($"public class {name}SO : ScriptableObjectBase");
         code.AppendLine("{");
-        var type = (needRef ? $"SerializableDictionary<Table.{name}, " : "List<") + $"Table.{name}Data>";
+        var type = (needRef ? $"SerializableDictionary<Table.{name}Enum, " : "List<") + $"Table.{name}Data>";
         code.AppendLine($"\tpublic {type} Datas;");
         code.AppendLine();
         code.AppendLine("\tpublic override void CreateData(DataTable table)");
@@ -638,7 +638,7 @@ public class ExcelBuilder
         code.Append("\t\t\tDatas.Add(");
         if (needRef)
         {
-            code.Append($"(Table.{name})System.Enum.Parse(typeof(Table.{name}), table.Rows[i][0].ToString()), ");
+            code.Append($"(Table.{name}Enum)System.Enum.Parse(typeof(Table.{name}Enum), table.Rows[i][0].ToString()), ");
         }
         code.AppendLine($"data);");
         code.AppendLine("\t\t}");
@@ -654,14 +654,14 @@ public class ExcelBuilder
         code.AppendLine("{");
         foreach (var info in infos)
         {
-            code.AppendLine($"\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data> {info.Name};");
+            code.AppendLine($"\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}Enum, Table.{info.Name}Data> {info.Name};");
         }
         code.AppendLine();
         code.AppendLine("\tpublic static void LoadData()");
         code.AppendLine("\t{");
         foreach (var info in infos)
         {
-            code.AppendLine($"\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data>();");
+            code.AppendLine($"\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}Enum, Table.{info.Name}Data>();");
         }
         code.AppendLine("\t}");
         code.AppendLine("}");

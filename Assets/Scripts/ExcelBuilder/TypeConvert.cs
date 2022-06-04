@@ -79,7 +79,7 @@ public static class TypeConvert
 
         foreach (var type in types.Split(";"))
         {
-            if (Enum.TryParse(Type.GetType($"Table.{type}"), value, out object retValue))
+            if (Enum.TryParse(Type.GetType($"Table.{type}Enum"), value, out object retValue))
             {
                 return (int)retValue;
             }

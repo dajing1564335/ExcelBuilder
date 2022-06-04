@@ -11,10 +11,7 @@ public class LabelRefSO : ScriptableObject
         {
             return id;
         }
-        else
-        {
-            LabelRef.Add(label, MaxId);
-            return MaxId++;
-        }
+        LabelRef.Add(label, MaxId);
+        return MaxId++;
     }
 }
