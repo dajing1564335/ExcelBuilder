@@ -485,7 +485,7 @@ public class ExcelBuilder
         code.AppendLine("\t}");
         code.AppendLine("}");
 
-        File.WriteAllText(folder + name + ".cs", code.ToString());
+        File.WriteAllText(folder + name + "Enum.cs", code.ToString());
     }
 
     private static void CreateTableDataClass(string name, List<Field> fields)
