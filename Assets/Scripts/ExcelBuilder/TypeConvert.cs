@@ -4,7 +4,7 @@ using System;
 
 public static class TypeConvert
 {
-    public static readonly List<string> SupportType = new List<string> { "int", "float", "bool", "string", "char", "MsgLabel" };
+    public static readonly List<string> SupportType = new() { "int", "float", "bool", "string", "char", "MsgLabel" };
 
     public static T GetValue<T>(string value)
     {
@@ -15,26 +15,20 @@ public static class TypeConvert
 
         if (typeof(T) == typeof(int))
         {
-            try
+            if (int.TryParse(value, out int retValue))
             {
-                return (T)(object)int.Parse(value);
+                return (T)(object)retValue;
             }
-            catch
-            {
-                Debug.LogError($"{value} is not a int.");
-            }
+            Debug.LogError($"{value} is not a int.");
         }
 
         if (typeof(T) == typeof(float))
         {
-            try
+            if (float.TryParse(value, out float retValue))
             {
-                return (T)(object)float.Parse(value);
+                return (T)(object)retValue;
             }
-            catch
-            {
-                Debug.LogError($"{value} is not a float.");
-            }
+            Debug.LogError($"{value} is not a float.");
         }
 
         if (typeof(T) == typeof(bool))
@@ -61,22 +55,16 @@ public static class TypeConvert
             {
                 return (T)(object)value[0];
             }
-            else
-            {
-                Debug.LogError($"{value} is not a char.");
-            }
+            Debug.LogError($"{value} is not a char.");
         }
 
         if (typeof(T).IsEnum)
         {
-            try
+            if (Enum.TryParse(typeof(T), value, out object retValue))
             {
-                return (T)Enum.Parse(typeof(T), value);
+                return (T)retValue;
             }
-            catch
-            {
-                Debug.LogError($"{value} is not a [{typeof(T).Name}].");
-            }
+            Debug.LogError($"{value} is not a [{typeof(T).Name}].");
         }
 
         return default;
@@ -84,24 +72,19 @@ public static class TypeConvert
 
     public static int GetValue(string value, string types)
     {
+        if (value == string.Empty)
+        {
+            return default;
+        }
+
         foreach (var type in types.Split(";"))
         {
-            var ret = -1;
-            var flag = true;
-            try
+            if (Enum.TryParse(Type.GetType($"Table.{type}"), value, out object retValue))
             {
-                ret = (int)Enum.Parse(Type.GetType($"Table.{type}"), value); 
-            }
-            catch
-            {
-                flag = false;
-            }
-            if (flag)
-            {
-                return ret;
+                return (int)retValue;
             }
         }
         Debug.LogError($"[{value}] is not in [{types}]");
-        return -1;
+        return default;
     }
 }
