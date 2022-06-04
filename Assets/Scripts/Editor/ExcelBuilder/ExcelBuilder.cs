@@ -246,7 +246,7 @@ public class ExcelBuilder
             
             foreach (DataTable table in tables)
             {
-                if (table.Columns.Count == 0 || table.Rows.Count < 3)
+                if (table.Columns.Count == 0 || table.Rows.Count < 2)
                 {
                     continue;
                 }
