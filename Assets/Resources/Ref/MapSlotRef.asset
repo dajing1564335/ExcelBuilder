@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7995b13bc7a02346a784cb06e31dc52, type: 3}
+  m_Name: MapSlotRef
+  m_EditorClassIdentifier: 
+  LabelRef:
+    list:
+    - Key: Slot0
+      Value: 0
+    - Key: Slot1
+      Value: 1
+    - Key: Slot2
+      Value: 2
+    - Key: Slot3
+      Value: 3
+    - Key: Slot15
+      Value: 4
+    - Key: Slot16
+      Value: 5
+    - Key: Slot17
+      Value: 6
+    - Key: Slot18
+      Value: 7
+    - Key: Slot19
+      Value: 8
+    - Key: Slot20
+      Value: 9
+    - Key: Slot21
+      Value: 10
+    - Key: Slot22
+      Value: 11
+    - Key: Slot23
+      Value: 12
+    - Key: Slot24
+      Value: 13
+    - Key: Slot4
+      Value: 14
+    - Key: Slot9
+      Value: 15
+    - Key: Slot6
+      Value: 16
+    - Key: Slot7
+      Value: 17
+    - Key: Slot8
+      Value: 18
+    - Key: Slot5
+      Value: 19
+    - Key: Slot10
+      Value: 20
+    - Key: Slot11
+      Value: 21
+    - Key: Slot12
+      Value: 22
+    - Key: Slot13
+      Value: 23
+    - Key: Slot14
+      Value: 24
+  MaxId: 25

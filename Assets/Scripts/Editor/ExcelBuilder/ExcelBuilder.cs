@@ -191,7 +191,9 @@ public class ExcelBuilder
     {
         public string Type;
         public string Name;
+        public int FieldLength = 1;
         public int ListCount = 1;
+        public int ListItemLength;
         public bool IsBaseType;
         public List<Field> SubClass;
 
@@ -200,11 +202,6 @@ public class ExcelBuilder
             Type = types;
             Name = name;
             IsBaseType = isBaseType;
-        }
-
-        public Field(string types, string name) : this(types, name, true)
-        {
-            SubClass = new();
         }
     }
 
@@ -272,35 +269,137 @@ public class ExcelBuilder
             }
         }
         //-------------------------------------------------------------------------------------------------------------
-        Field GetField(string type, string name)
+        
+        int GetEmptyCount(int startIndex, DataTable table, int index)
         {
-            if (type == string.Empty || name == string.Empty)
+            int count = 0;
+            for (int i = startIndex; i < table.Columns.Count; i++)
             {
-                Debug.LogError($"Table has empty type or field!");
+                var type = table.Rows[0][i].ToString();
+                if (type == "]")
+                {
+                    return count;
+                }
+                if (type == string.Empty)
+                {
+                    count++;
+                }
+                else
+                {
+                    Debug.LogError($"Miss \"]\" at [{fileInfos[index].Name} - {table.TableName}]");
+                    return -1;
+                }
+            }
+            Debug.LogError($"Miss \"]\" at [{fileInfos[index].Name} - {table.TableName}]");
+            return -1;
+        }
+
+        Field GetField(int startIndex, DataTable table, int index)
+        {
+            Field field;
+            var type = table.Rows[0][startIndex].ToString();
+            if (type == string.Empty)
+            {
+                Debug.LogError($"Table has empty type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex})]");
                 return null;
             }
-            var typeList = type.Split(";");
-            var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
-            if (typeList.Length == 1)
+            var name = table.Rows[1][startIndex].ToString();
+            if (name == string.Empty)
             {
-                if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
+                Debug.LogError($"Table has empty field! [{fileInfos[index].Name} - {table.TableName} - (1,{startIndex})]");
+                return null;
+            }
+            if (type == "class[")
+            {
+                field = new Field($"{GetTableName(table.TableName, excelData[index][0].TableName, fileInfos[index].Name)}{table.Rows[1][startIndex]}", table.Rows[1][startIndex].ToString(), true);
+                var fields = GetFields(startIndex + 1, table, index, true);
+                if (fields == null)
                 {
-                    Debug.LogError($"There are not support type! [{typeList[0]}]");
                     return null;
                 }
+                field.SubClass = fields;
+                foreach (var f in fields)
+                {
+                    field.ListItemLength += f.FieldLength;
+                }
+                var count = GetEmptyCount(startIndex + 1 + field.ListItemLength, table, index);
+                if (count == -1)
+                {
+                    return null;
+                }
+                if (count % field.ListItemLength != 0)
+                {
+                    Debug.LogError($"SubClass count is not correct! [{fileInfos[index].Name} - {table.TableName} - {field.Name}");
+                    return null;
+                }
+                field.ListCount += count / field.ListItemLength;
+                field.FieldLength = field.ListCount * field.ListItemLength + 2;
             }
             else
             {
-                foreach (var t in typeList)
+                var typeList = type.Split(";");
+                var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
+                if (typeList.Length == 1)
                 {
-                    if (!folderNames.Contains(t) && Type.GetType($"{t},Assembly-CSharp") == null)
+                    if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
                     {
-                        Debug.LogError($"Muilt type must be table enum! [{type}-{t}]");
+                        Debug.LogError($"There are not support type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex}) - {typeList[0]}]");
                         return null;
                     }
                 }
+                else
+                {
+                    foreach (var t in typeList)
+                    {
+                        if (!folderNames.Contains(t) && Type.GetType($"{t},Assembly-CSharp") == null)
+                        {
+                            Debug.LogError($"Muilt type must be table enum! [{type}-{t}]");
+                            return null;
+                        }
+                    }
+                }
+                field = new Field(type, name, isBaseType);
+                if (startIndex + 1 < table.Columns.Count && table.Rows[0][startIndex + 1].ToString() == "[")
+                {
+                    field.ListItemLength = 1;
+                    var count = GetEmptyCount(startIndex + 2, table, index);
+                    if (count == -1)
+                    {
+                        return null;
+                    }
+                    field.ListCount += count + 1;
+                    field.FieldLength = field.ListCount + 1;
+                }
             }
-            return new Field(type, name, isBaseType);
+            return field;
+        }
+
+        List<Field> GetFields(int startIndex, DataTable table, int index, bool sub = false)
+        {
+            List<Field> fields = new();
+            while (startIndex < table.Columns.Count)
+            {
+                if (sub)
+                {
+                    var type = table.Rows[0][startIndex].ToString();
+                    if (type == string.Empty || type == "]")
+                    {
+                        return fields;
+                    }
+                }
+                var field = GetField(startIndex, table, index);
+                if (field == null)
+                {
+                    return null;
+                }
+                fields.Add(field);
+                startIndex += field.FieldLength;
+            }
+            if (sub)
+            {
+                return null;
+            }
+            return fields;
         }
 
         //CreateDataClass
@@ -314,106 +413,11 @@ public class ExcelBuilder
                 {
                     continue;
                 }
-                List<Field> fields = new();
-                Field subClass = null;
-                bool subClassFieldEnd = false;
-                int listCount = 0;
-                for (int i = 1; i < table.Columns.Count; i++)
+                List<Field> fields = GetFields(1, table, index);
+                if (fields == null)
                 {
-                    var type = table.Rows[0][i].ToString();
-                    #region SubClass
-                    if (type == "class[")
-                    {
-                        if (listCount > 0)
-                        {
-                            Debug.LogError($"Miss \"]\" at [{table.TableName}]");
-                            return;
-                        }
-                        if (table.Rows[1][i] is DBNull)
-                        {
-                            Debug.LogError($"Table has empty class name! [{fileInfos[index].Name} - \"class[\" ]");
-                            return;
-                        }
-                        subClass = new Field($"{GetTableName(table.TableName, excelData[index][0].TableName, fileInfos[index].Name)}{table.Rows[1][i]}", table.Rows[1][i].ToString());
-                        continue;
-                    }
-                    if (subClass != null)
-                    {
-                        if (type == "]")
-                        {
-                            if (listCount % subClass.SubClass.Count != 0)
-                            {
-                                Debug.LogError($"SubClass count is not correct! [{subClass.Name}");
-                            }
-                            subClass.ListCount = listCount / subClass.SubClass.Count;
-                            listCount = 0;
-                            fields.Add(subClass);
-                            subClass = null;
-                            subClassFieldEnd = false;
-                            continue;
-                        }
-                        listCount++;
-                        if (!subClassFieldEnd)
-                        {
-                            if (type == string.Empty)
-                            {
-                                subClassFieldEnd = true;
-                                continue;
-                            }
-                            var subField = GetField(type, table.Rows[1][i].ToString());
-                            if (subField == null)
-                            {
-                                Debug.LogError($"Error Table - [{fileInfos[index].Name}]");
-                                return;
-                            }
-                            else
-                            {
-                                subClass.SubClass.Add(subField);
-                            }
-                        }
-                        continue;
-                    }
-                    #endregion
-                    if (type == "[")
-                    {
-                        if (fields.Count > 0 && listCount == 0)
-                        {
-                            listCount = 1;
-                            continue;
-                        }
-                        else
-                        {
-                            Debug.LogError($"Invaild \"[\" at [{table.TableName}]");
-                            return;
-                        }
-                    }
-                    if (listCount > 0)
-                    {
-                        listCount++;
-                        if (type == "]")
-                        {
-                            fields[^1].ListCount = listCount;
-                            listCount = 0;
-                        }
-                        continue;
-                    }
-                    var field = GetField(type, table.Rows[1][i].ToString());
-                    if (field == null)
-                    {
-                        Debug.LogError($"Error Table - [{fileInfos[index].Name}]");
-                        return;
-                    }
-                    else
-                    {
-                        fields.Add(field);
-                    }
-                }
-                if (listCount > 0)
-                {
-                    Debug.LogError($"Miss \"]\" at [{table.TableName}]");
                     return;
                 }
-
                 var tableName = GetTableName(table.TableName, excelData[index][0].TableName, fileInfos[index].Name);
                 if (!folderNames.Contains(tableName))
                 {
@@ -497,7 +501,7 @@ public class ExcelBuilder
         }
 
         var code = new StringBuilder();
-        void CreateClass(string name, List<Field> fields, bool isSubClass = false)
+        void CreateClass(string name, List<Field> fields)
         {
             code.AppendLine("\t[System.Serializable]");
             code.AppendLine($"\tpublic class {name}");
@@ -506,23 +510,20 @@ public class ExcelBuilder
             {
                 code.AppendLine($"\t\tpublic {GetType(field)} {field.Name}{(field.ListCount < 2 ? ";" : " = new();")}");
             }
-            if (isSubClass)
+            code.AppendLine("\t}");
+        }
+
+        void CreateSubClass(Field field)
+        {
+            if (field.SubClass != null)
             {
                 code.AppendLine();
-                code.Append($"\t\tpublic {name}({GetType(fields[0])} {fields[0].Name}");
-                for (int i = 1; i < fields.Count; i++)
+                CreateClass(field.Type, field.SubClass);
+                foreach (var f in field.SubClass)
                 {
-                    code.Append($", {GetType(fields[i])} {fields[i].Name}");
+                    CreateSubClass(f);
                 }
-                code.AppendLine(")");
-                code.AppendLine("\t\t{");
-                foreach (var field in fields)
-                {
-                    code.AppendLine($"\t\t\tthis.{field.Name} = {field.Name};");
-                }
-                code.AppendLine("\t\t}");
             }
-            code.AppendLine("\t}");
         }
 
         var folder = TableFolder + name + "/";
@@ -535,11 +536,7 @@ public class ExcelBuilder
         CreateClass(name + "Data", fields);
         foreach (var field in fields)
         {
-            if (field.SubClass != null)
-            {
-                code.AppendLine();
-                CreateClass(field.Type, field.SubClass, true);
-            }
+            CreateSubClass(field);
         }
         code.AppendLine("}");
 
@@ -548,22 +545,22 @@ public class ExcelBuilder
 
     private static void CreateTableSO(string name, List<Field> fields, bool needRef)
     {
-        static string GetClassValue(Field field, int index, int j = -1)
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"new Table.{field.Type}(");
-            sb.Append($"\t\t\t\t{GetFieldValue(field.SubClass[0], index, j)}");
-            for (int i = 1; i < field.SubClass.Count; i++)
-            {
-                sb.AppendLine($", ");
-                sb.Append($"\t\t\t\t{GetFieldValue(field.SubClass[i], index + i, j < 0 ? -1 : i)}");
-            }
-            sb.AppendLine();
-            sb.Append("\t\t\t\t)");
-            return sb.ToString();
-        }
+        //string GetClassValue(Field field, int index, int j = -1)
+        //{
+        //    StringBuilder sb = new();
+        //    sb.AppendLine($"new Table.{field.Type}(");
+        //    sb.Append($"\t\t\t\t{GetFieldValue(field.SubClass[0], index, j)}");
+        //    for (int i = 1; i < field.SubClass.Count; i++)
+        //    {
+        //        sb.AppendLine($", ");
+        //        sb.Append($"\t\t\t\t{GetFieldValue(field.SubClass[i], index + i, j < 0 ? -1 : i)}");
+        //    }
+        //    sb.AppendLine();
+        //    sb.Append("\t\t\t\t)");
+        //    return sb.ToString();
+        //}
 
-        static string GetFieldValue(Field field, int index, int j = -1)
+        string GetFieldValue(Field field, int index, int j = -1)
         {
             if (field.IsBaseType)
             {
@@ -571,12 +568,47 @@ public class ExcelBuilder
                 {
                     return $"TypeConvert.GetValue<{field.Type}>(table.Rows[i][{(j < 0 ? index : j == 0 ? "j" : $"j + {j}")}].ToString())";
                 }
-                else
+                var code = new StringBuilder();
+                code.AppendLine($"\t\t\tTable.{field.Type} {field.Name} = new();");
+                int i = 0;
+                foreach (var f in field.SubClass)
                 {
-                    return GetClassValue(field, index, j);
+                    code.AppendLine(GetFieldCode(index + i + 1, f, field.Name, j < 0 ? -1 : i));
+                    i += f.FieldLength;
                 }
+                return code.ToString();
             }
             return $"TypeConvert.GetValue(table.Rows[i][{(j < 0 ? index : j == 0 ? "j" : $"j + {j}")}].ToString(), \"{field.Type}\")";
+        }
+
+        string GetFieldCode(int index, Field field, string dataName, int j = -1)
+        {
+            if (field.ListCount < 2)
+            {
+                if (!field.IsBaseType || field.SubClass == null)
+                {
+                    return $"\t\t\t{dataName}.{field.Name} = {GetFieldValue(field, index, j)};";
+                }
+                return $"{GetFieldValue(field, index, j)}\t\t\t{dataName}.{field.Name} = {field.Name};";
+            }
+            var code = new StringBuilder();
+            index++;
+            code.AppendLine($"\t\t\tfor (int j = {index}; j < {index + field.ListCount * field.ListItemLength}; j += {field.ListItemLength})");
+            code.AppendLine("\t\t\t{");
+            code.AppendLine("\t\t\t\tif (table.Rows[i][j] is System.DBNull)");
+            code.AppendLine("\t\t\t\t{");
+            code.AppendLine("\t\t\t\t\tbreak;");
+            code.AppendLine("\t\t\t\t}");
+            if (!field.IsBaseType || field.SubClass == null)
+            { 
+                code.AppendLine($"\t\t\t\t{dataName}.{field.Name}.Add({GetFieldValue(field, index, 0)});"); 
+            }
+            else
+            {
+                code.AppendLine($"{GetFieldValue(field, index, 0)}\t\t\t\t{dataName}.{field.Name}.Add({field.Name});");
+            }
+            code.AppendLine("\t\t\t}");
+            return code.ToString();
         }
 
         var code = new StringBuilder();
@@ -598,42 +630,12 @@ public class ExcelBuilder
         code.AppendLine("\t\t\t\tcontinue;");
         code.AppendLine("\t\t\t}");
 
-        code.AppendLine($"\t\t\tTable.{name}Data data = new();");
         int index = 1;
+        code.AppendLine($"\t\t\tTable.{name}Data data = new();");
         foreach (var field in fields)
         {
-            if (field.ListCount < 2)
-            {
-                if (field.SubClass == null)
-                {
-                    code.AppendLine($"\t\t\tdata.{field.Name} = {GetFieldValue(field, index++)};");
-                }
-                else
-                {
-                    code.AppendLine($"\t\t\tdata.{field.Name} = {GetFieldValue(field, ++index)};");
-                    index += field.SubClass.Count + 1;
-                }
-            }
-            else
-            {
-                index++;
-                if (field.SubClass == null)
-                {
-                    code.AppendLine($"\t\t\tfor (int j = {index}; j < {index + field.ListCount}; ++j)");
-                }
-                else
-                {
-                    code.AppendLine($"\t\t\tfor (int j = {index}; j < {index + field.ListCount * field.SubClass.Count}; j += {field.SubClass.Count})");
-                }
-                code.AppendLine("\t\t\t{");
-                code.AppendLine("\t\t\t\tif (table.Rows[i][j] is System.DBNull)");
-                code.AppendLine("\t\t\t\t{");
-                code.AppendLine("\t\t\t\t\tbreak;");
-                code.AppendLine("\t\t\t\t}");
-                code.AppendLine($"\t\t\t\tdata.{field.Name}.Add({GetFieldValue(field, 0, 0)});");
-                code.AppendLine("\t\t\t}");
-                index += field.SubClass == null ? field.ListCount : field.ListCount * field.SubClass.Count + 1;
-            }
+            code.AppendLine(GetFieldCode(index, field, "data"));
+            index += field.FieldLength;
         }
         code.Append("\t\t\tDatas.Add(");
         if (needRef)

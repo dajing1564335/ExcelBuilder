@@ -14,7 +14,10 @@ public class ExcelBuilderSO : ScriptableObject
         {
             if (!names.Contains(name))
             {
-                Directory.Delete(ExcelBuilder.TableFolder + name, true);
+                if (File.Exists(ExcelBuilder.TableFolder + name))
+                {
+                    Directory.Delete(ExcelBuilder.TableFolder + name, true);
+                }
                 File.Delete(ExcelBuilder.TableFolder + name + ".meta");
                 File.Delete(ExcelBuilder.DataFolder + name + "Data.asset");
                 File.Delete(ExcelBuilder.DataFolder + name + "Data.asset.meta");

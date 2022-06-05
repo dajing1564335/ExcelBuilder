@@ -1,0 +1,391 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1010cbb87250bbc4ab7b6d9a0376b03d, type: 3}
+  m_Name: MapSlotData
+  m_EditorClassIdentifier: 
+  Datas:
+    list:
+    - Key: 0
+      Value:
+        X: 0
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 3
+        Slot9: 15
+        AAA: []
+        Slot10: 15
+        BBB:
+          a: 1
+          b: 12
+    - Key: 1
+      Value:
+        X: 1
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 3
+        Slot9: 20
+        AAA: []
+        Slot10: 20
+        BBB:
+          a: 1
+          b: 12
+    - Key: 2
+      Value:
+        X: 2
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 3
+        Slot9: 21
+        AAA: []
+        Slot10: 21
+        BBB:
+          a: 1
+          b: 12
+    - Key: 3
+      Value:
+        X: 3
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 3
+        Slot9: 22
+        AAA: []
+        Slot10: 22
+        BBB:
+          a: 1
+          b: 12
+    - Key: 4
+      Value:
+        X: 8
+        Z: 2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 13
+        AAA: []
+        Slot10: 13
+        BBB:
+          a: 1
+          b: 12
+    - Key: 5
+      Value:
+        X: 9
+        Z: 2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 15
+        AAA: []
+        Slot10: 15
+        BBB:
+          a: 1
+          b: 12
+    - Key: 6
+      Value:
+        X: 9
+        Z: 1
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 15
+        AAA: []
+        Slot10: 15
+        BBB:
+          a: 1
+          b: 12
+    - Key: 7
+      Value:
+        X: 5
+        Z: -1
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 15
+        AAA: []
+        Slot10: 15
+        BBB:
+          a: 1
+          b: 12
+    - Key: 8
+      Value:
+        X: 5
+        Z: -2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 20
+        AAA: []
+        Slot10: 20
+        BBB:
+          a: 1
+          b: 12
+    - Key: 9
+      Value:
+        X: 6
+        Z: -2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 21
+        AAA: []
+        Slot10: 21
+        BBB:
+          a: 1
+          b: 12
+    - Key: 10
+      Value:
+        X: 7
+        Z: -2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 22
+        AAA: []
+        Slot10: 22
+        BBB:
+          a: 1
+          b: 12
+    - Key: 11
+      Value:
+        X: 8
+        Z: -2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 23
+        AAA: []
+        Slot10: 23
+        BBB:
+          a: 1
+          b: 12
+    - Key: 12
+      Value:
+        X: 9
+        Z: -2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 24
+        AAA: []
+        Slot10: 24
+        BBB:
+          a: 1
+          b: 12
+    - Key: 13
+      Value:
+        X: 9
+        Z: -1
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 4
+        AAA: []
+        Slot10: 4
+        BBB:
+          a: 1
+          b: 12
+    - Key: 14
+      Value:
+        X: 4
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 3
+        Slot9: 23
+        AAA: []
+        Slot10: 23
+        BBB:
+          a: 1
+          b: 12
+    - Key: 15
+      Value:
+        X: 9
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 7
+        AAA: []
+        Slot10: 7
+        BBB:
+          a: 1
+          b: 12
+    - Key: 16
+      Value:
+        X: 6
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 4
+        AAA: []
+        Slot10: 4
+        BBB:
+          a: 1
+          b: 12
+    - Key: 17
+      Value:
+        X: 7
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 5
+        AAA: []
+        Slot10: 5
+        BBB:
+          a: 1
+          b: 12
+    - Key: 18
+      Value:
+        X: 8
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 6
+        AAA: []
+        Slot10: 6
+        BBB:
+          a: 1
+          b: 12
+    - Key: 19
+      Value:
+        X: 5
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 3
+        Slot9: 24
+        AAA: []
+        Slot10: 24
+        BBB:
+          a: 1
+          b: 12
+    - Key: 20
+      Value:
+        X: 10
+        Z: 0
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 8
+        AAA: []
+        Slot10: 8
+        BBB:
+          a: 1
+          b: 12
+    - Key: 21
+      Value:
+        X: 5
+        Z: 1
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 9
+        AAA: []
+        Slot10: 9
+        BBB:
+          a: 1
+          b: 12
+    - Key: 22
+      Value:
+        X: 5
+        Z: 2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 10
+        AAA: []
+        Slot10: 10
+        BBB:
+          a: 1
+          b: 12
+    - Key: 23
+      Value:
+        X: 6
+        Z: 2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 11
+        AAA: []
+        Slot10: 11
+        BBB:
+          a: 1
+          b: 12
+    - Key: 24
+      Value:
+        X: 7
+        Z: 2
+        PreSlot: 
+        NextSlot: 
+        NextType: 
+        Test: 
+        Point12: 4
+        Slot9: 12
+        AAA: []
+        Slot10: 12
+        BBB:
+          a: 1
+          b: 12
