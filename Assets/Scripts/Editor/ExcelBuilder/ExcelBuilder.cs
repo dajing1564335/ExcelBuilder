@@ -555,40 +555,40 @@ public class ExcelBuilder
             return space;
         }
 
-        string GetFieldValue(Field field, int index, int j = -1, int loop = 0)
+        string GetFieldValue(Field field, int index, int j, int loop = 0)
         {
             if (field.IsBaseType)
             {
                 if (field.SubClass == null)
                 {
-                    return $"TypeConvert.GetValue<{field.Type}>(table.Rows[i][{(j < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}].ToString())";
+                    return $"TypeConvert.GetValue<{field.Type}>(table.Rows[i][{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}].ToString())";
                 }
                 var code = new StringBuilder();
                 code.AppendLine($"{GetSpace(4 + loop)}Table.{field.Type} {field.Name} = new();");
-                int i = 0;
                 foreach (var f in field.SubClass)
                 {
-                    code.AppendLine(GetFieldCode(index + i + 1, f, field.Name, j < 0 ? -1 : f.ListCount > 1 || f.SubClass != null ? i + 1 : i, loop + 1));
-                    i += f.FieldLength;
+                    code.AppendLine(GetFieldCode(index + j + 1, f, field.Name, loop < 0 ? j : f.ListCount > 1 || f.SubClass != null ? j + 1 : j, loop));
+                    j += f.FieldLength;
                 }
                 return code.ToString();
             }
-            return $"TypeConvert.GetValue(table.Rows[i][{(j < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}].ToString(), \"{field.Type}\")";
+            return $"TypeConvert.GetValue(table.Rows[i][{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}].ToString(), \"{field.Type}\")";
         }
 
-        string GetFieldCode(int index, Field field, string dataName, int j = -1, int loop = 0)
+        string GetFieldCode(int index, Field field, string dataName, int j, int loop)
         {
-            var space = GetSpace(3 + loop);
+            var space = GetSpace(4 + loop);
             if (field.ListCount < 2)
             {
                 if (!field.IsBaseType || field.SubClass == null)
                 {
-                    return $"{space}{dataName}.{field.Name} = {GetFieldValue(field, index, j, loop - 1)};";
+                    return $"{space}{dataName}.{field.Name} = {GetFieldValue(field, index, j, loop)};";
                 }
-                return $"{GetFieldValue(field, index, j, loop - 1)}{space}{dataName}.{field.Name} = {field.Name};";
+                return $"{GetFieldValue(field, index, j, loop)}{space}{dataName}.{field.Name} = {field.Name};";
             }
             var code = new StringBuilder();
             index++;
+            loop++;
             code.AppendLine($"{space}for (int j{loop} = {(loop == 0 ? index : $"j{loop - 1} + {j}")}; j{loop} < {(loop == 0 ? index + field.ListCount * field.ListItemLength : $"j{loop - 1} + {j + field.ListCount * field.ListItemLength}")}; j{loop} += {field.ListItemLength})");
             code.AppendLine($"{space}{{");
             code.AppendLine($"{space}\tif (table.Rows[i][j{loop}] is System.DBNull)");
@@ -630,7 +630,7 @@ public class ExcelBuilder
         code.AppendLine($"\t\t\tTable.{name}Data data = new();");
         foreach (var field in fields)
         {
-            code.AppendLine(GetFieldCode(index, field, "data"));
+            code.AppendLine(GetFieldCode(index, field, "data", 0, -1));
             index += field.FieldLength;
         }
         code.Append("\t\t\tDatas.Add(");

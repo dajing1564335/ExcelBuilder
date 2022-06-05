@@ -17,9 +17,6 @@ MonoBehaviour:
     - a: 0
       b: 12
       c: 1
-    - a: 0
-      b: 12
-      c: 1
     Slot10: 15
     BBB:
       a: 0

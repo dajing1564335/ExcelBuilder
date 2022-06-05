@@ -4,6 +4,7 @@ public static class TableAccessor
 	public static TableAccessorList<Table.NextTypeEnum, Table.NextTypeData> NextType;
 	public static TableAccessorList<Table.SlotParamEnum, Table.SlotParamData> SlotParam;
 	public static TableAccessorList<Table.TextEnum, Table.TextData> Text;
+	public static TableAccessorList<Table.Text2Enum, Table.Text2Data> Text2;
 
 	public static void LoadData()
 	{
@@ -11,5 +12,6 @@ public static class TableAccessor
 		NextType = new TableAccessorList<Table.NextTypeEnum, Table.NextTypeData>();
 		SlotParam = new TableAccessorList<Table.SlotParamEnum, Table.SlotParamData>();
 		Text = new TableAccessorList<Table.TextEnum, Table.TextData>();
+		Text2 = new TableAccessorList<Table.Text2Enum, Table.Text2Data>();
 	}
 }
