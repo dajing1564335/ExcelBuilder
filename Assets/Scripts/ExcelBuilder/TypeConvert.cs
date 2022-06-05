@@ -77,9 +77,21 @@ public static class TypeConvert
             return default;
         }
 
+        if (int.TryParse(value, out int intValue))
+        {
+            return intValue;
+        }
+
         foreach (var type in types.Split(";"))
         {
-            if (Enum.TryParse(Type.GetType($"Table.{type}Enum"), value, out object retValue))
+            var t = Type.GetType($"Table.{type}Enum");
+            object retValue;
+            if (t != null && Enum.TryParse(t, value, out retValue))
+            {
+                return (int)retValue;
+            }
+            t = Type.GetType(type);
+            if (t != null && Enum.TryParse(t, value, out retValue))
             {
                 return (int)retValue;
             }

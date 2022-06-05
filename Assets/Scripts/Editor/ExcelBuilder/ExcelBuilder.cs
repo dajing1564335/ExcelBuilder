@@ -283,7 +283,7 @@ public class ExcelBuilder
             var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
             if (typeList.Length == 1)
             {
-                if (!isBaseType && !folderNames.Contains(typeList[0]))
+                if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
                 {
                     Debug.LogError($"There are not support type! [{typeList[0]}]");
                     return null;
@@ -293,7 +293,7 @@ public class ExcelBuilder
             {
                 foreach (var t in typeList)
                 {
-                    if (!folderNames.Contains(t))
+                    if (!folderNames.Contains(t) && Type.GetType($"{t},Assembly-CSharp") == null)
                     {
                         Debug.LogError($"Muilt type must be table enum! [{type}-{t}]");
                         return null;
