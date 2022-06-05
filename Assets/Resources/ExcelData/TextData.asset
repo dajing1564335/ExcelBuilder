@@ -13,5 +13,23 @@ MonoBehaviour:
   m_Name: TextData
   m_EditorClassIdentifier: 
   Datas:
-  - AA: []
-    AAA: []
+  - AA:
+    - Name: 1
+      na: qq
+      Param: 020000000300000004000000
+    - Name: 5
+      na: qqq
+      Param: 060000000700000008000000
+    AAA:
+    - Name: A
+      AAAA:
+      - Name: 1
+        Param: 0200000003000000
+      - Name: 4
+        Param: 0500000006000000
+    - Name: AA
+      AAAA:
+      - Name: 11
+        Param: 1600000021000000
+      - Name: 44
+        Param: 3700000042000000

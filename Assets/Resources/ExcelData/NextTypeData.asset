@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: NextTypeData
   m_EditorClassIdentifier: 
   Datas:
-  - Points: 
-  - Points: 
-  - Points: 
+  - Points: 0500000006000000
+  - Points: 0100000002000000
+  - Points: 0300000004000000

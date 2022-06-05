@@ -13,6 +13,7 @@ namespace Table
 	public class TextAA
 	{
 		public string Name;
+		public string na;
 		public List<int> Param = new();
 	}
 

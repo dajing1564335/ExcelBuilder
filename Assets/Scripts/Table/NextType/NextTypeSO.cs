@@ -15,15 +15,14 @@ public class NextTypeSO : ScriptableObjectBase
 				continue;
 			}
 			Table.NextTypeData data = new();
-			for (int j = 2; j < 7; j += 1)
+			for (int j0 = 2; j0 < 7; j0 += 1)
 			{
-				if (table.Rows[i][j] is System.DBNull)
+				if (table.Rows[i][j0] is System.DBNull)
 				{
 					break;
 				}
-				data.Points.Add(TypeConvert.GetValue<int>(table.Rows[i][j].ToString()));
+				data.Points.Add(TypeConvert.GetValue<int>(table.Rows[i][j0].ToString()));
 			}
-
 			Datas.Add(data);
 		}
 	}

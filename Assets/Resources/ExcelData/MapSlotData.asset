@@ -19,12 +19,18 @@ MonoBehaviour:
         X: 0
         Z: 0
         PreSlot: 
-        NextSlot: 
+        NextSlot: 01000000
         NextType: 
-        Test: 
+        Test: 0c00000001000000
         Point12: 3
         Slot9: 15
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 15
         BBB:
           a: 1
@@ -33,13 +39,19 @@ MonoBehaviour:
       Value:
         X: 1
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 00000000
+        NextSlot: 02000000
         NextType: 
-        Test: 
+        Test: 0200000002000000
         Point12: 3
         Slot9: 20
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 20
         BBB:
           a: 1
@@ -48,13 +60,19 @@ MonoBehaviour:
       Value:
         X: 2
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 01000000
+        NextSlot: 03000000
         NextType: 
-        Test: 
+        Test: 0100000003000000
         Point12: 3
         Slot9: 21
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 21
         BBB:
           a: 1
@@ -63,13 +81,19 @@ MonoBehaviour:
       Value:
         X: 3
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 02000000
+        NextSlot: 0e000000
         NextType: 
-        Test: 
+        Test: 010000000e000000
         Point12: 3
         Slot9: 22
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 22
         BBB:
           a: 1
@@ -78,13 +102,19 @@ MonoBehaviour:
       Value:
         X: 8
         Z: 2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 18000000
+        NextSlot: 05000000
         NextType: 
-        Test: 
+        Test: 0100000005000000
         Point12: 4
         Slot9: 13
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 13
         BBB:
           a: 1
@@ -93,13 +123,19 @@ MonoBehaviour:
       Value:
         X: 9
         Z: 2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 04000000
+        NextSlot: 06000000
         NextType: 
-        Test: 
+        Test: 0100000006000000
         Point12: 4
         Slot9: 15
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 15
         BBB:
           a: 1
@@ -108,13 +144,19 @@ MonoBehaviour:
       Value:
         X: 9
         Z: 1
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 05000000
+        NextSlot: 0f000000
         NextType: 
-        Test: 
+        Test: 0100000007000000
         Point12: 4
         Slot9: 15
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 15
         BBB:
           a: 1
@@ -123,13 +165,19 @@ MonoBehaviour:
       Value:
         X: 5
         Z: -1
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 13000000
+        NextSlot: 08000000
         NextType: 
-        Test: 
+        Test: 0100000008000000
         Point12: 4
         Slot9: 15
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 15
         BBB:
           a: 1
@@ -138,13 +186,19 @@ MonoBehaviour:
       Value:
         X: 5
         Z: -2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 07000000
+        NextSlot: 09000000
         NextType: 
-        Test: 
+        Test: 0100000009000000
         Point12: 4
         Slot9: 20
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 20
         BBB:
           a: 1
@@ -153,13 +207,19 @@ MonoBehaviour:
       Value:
         X: 6
         Z: -2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 08000000
+        NextSlot: 0a000000
         NextType: 
-        Test: 
+        Test: 010000000a000000
         Point12: 4
         Slot9: 21
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 21
         BBB:
           a: 1
@@ -168,13 +228,19 @@ MonoBehaviour:
       Value:
         X: 7
         Z: -2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 09000000
+        NextSlot: 0b000000
         NextType: 
-        Test: 
+        Test: 010000000b000000
         Point12: 4
         Slot9: 22
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 22
         BBB:
           a: 1
@@ -183,13 +249,19 @@ MonoBehaviour:
       Value:
         X: 8
         Z: -2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 0a000000
+        NextSlot: 0c000000
         NextType: 
-        Test: 
+        Test: 010000000c000000
         Point12: 4
         Slot9: 23
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 23
         BBB:
           a: 1
@@ -198,13 +270,19 @@ MonoBehaviour:
       Value:
         X: 9
         Z: -2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 0b000000
+        NextSlot: 0d000000
         NextType: 
-        Test: 
+        Test: 010000000d000000
         Point12: 4
         Slot9: 24
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 24
         BBB:
           a: 1
@@ -213,13 +291,19 @@ MonoBehaviour:
       Value:
         X: 9
         Z: -1
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 0c000000
+        NextSlot: 0f000000
         NextType: 
-        Test: 
+        Test: 0100000016000000
         Point12: 4
         Slot9: 4
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 4
         BBB:
           a: 1
@@ -228,13 +312,19 @@ MonoBehaviour:
       Value:
         X: 4
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 03000000
+        NextSlot: 13000000
         NextType: 
-        Test: 
+        Test: 0100000013000000
         Point12: 3
         Slot9: 23
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 23
         BBB:
           a: 1
@@ -243,13 +333,19 @@ MonoBehaviour:
       Value:
         X: 9
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 12000000060000000d000000
+        NextSlot: 14000000
         NextType: 
-        Test: 
+        Test: 0100000014000000
         Point12: 4
         Slot9: 7
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 7
         BBB:
           a: 1
@@ -258,13 +354,19 @@ MonoBehaviour:
       Value:
         X: 6
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 13000000
+        NextSlot: 11000000
         NextType: 
-        Test: 
+        Test: 0100000011000000
         Point12: 4
         Slot9: 4
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 4
         BBB:
           a: 1
@@ -273,13 +375,19 @@ MonoBehaviour:
       Value:
         X: 7
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 10000000
+        NextSlot: 12000000
         NextType: 
-        Test: 
+        Test: 0100000012000000
         Point12: 4
         Slot9: 5
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 5
         BBB:
           a: 1
@@ -288,13 +396,19 @@ MonoBehaviour:
       Value:
         X: 8
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 11000000
+        NextSlot: 0f000000
         NextType: 
-        Test: 
+        Test: 010000000f000000
         Point12: 4
         Slot9: 6
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 6
         BBB:
           a: 1
@@ -303,13 +417,19 @@ MonoBehaviour:
       Value:
         X: 5
         Z: 0
-        PreSlot: 
-        NextSlot: 
-        NextType: 
-        Test: 
+        PreSlot: 0e000000
+        NextSlot: 150000001000000007000000
+        NextType: 010000000200000000000000
+        Test: 0100000010000000
         Point12: 3
         Slot9: 24
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 24
         BBB:
           a: 1
@@ -318,13 +438,19 @@ MonoBehaviour:
       Value:
         X: 10
         Z: 0
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 0f000000
+        NextSlot: 00000000
         NextType: 
-        Test: 
+        Test: 0100000015000000
         Point12: 4
         Slot9: 8
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 8
         BBB:
           a: 1
@@ -333,13 +459,19 @@ MonoBehaviour:
       Value:
         X: 5
         Z: 1
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 13000000
+        NextSlot: 16000000
         NextType: 
-        Test: 
+        Test: 0100000016000000
         Point12: 4
         Slot9: 9
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 9
         BBB:
           a: 1
@@ -348,13 +480,19 @@ MonoBehaviour:
       Value:
         X: 5
         Z: 2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 15000000
+        NextSlot: 17000000
         NextType: 
-        Test: 
+        Test: 0100000017000000
         Point12: 4
         Slot9: 10
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 10
         BBB:
           a: 1
@@ -363,13 +501,19 @@ MonoBehaviour:
       Value:
         X: 6
         Z: 2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 16000000
+        NextSlot: 18000000
         NextType: 
-        Test: 
+        Test: 0100000018000000
         Point12: 4
         Slot9: 11
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 11
         BBB:
           a: 1
@@ -378,13 +522,19 @@ MonoBehaviour:
       Value:
         X: 7
         Z: 2
-        PreSlot: 
-        NextSlot: 
+        PreSlot: 17000000
+        NextSlot: 04000000
         NextType: 
-        Test: 
+        Test: 0100000004000000
         Point12: 4
         Slot9: 12
-        AAA: []
+        AAA:
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
+        - a: 1
+          b: 12
         Slot10: 12
         BBB:
           a: 1

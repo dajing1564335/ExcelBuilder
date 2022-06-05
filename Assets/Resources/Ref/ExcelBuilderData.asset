@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ExcelBuilderData
   m_EditorClassIdentifier: 
   LoadMsgData: 0
-  LoadTableData: 1
+  LoadTableData: 0
   EnumNames:
   - MapSlot
   - NextType
