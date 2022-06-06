@@ -1,22 +1,3 @@
 public enum MsgLabel
 {
-	a12313 = 0,
-	None = 1,
-	NewGame = 2,
-	Continue = 3,
-	Setting = 4,
-	Exit = 5,
-	Language = 6,
-	SaveAndExit = 7,
-	CloseSetting = 8,
-	Confirm = 9,
-	Cancel = 10,
-	NewGameCheck = 11,
-	Zhangsan = 12,
-	Lisi = 13,
-	Wangwu = 14,
-	Story00 = 15,
-	Story01 = 16,
-	Story02 = 17,
-	Story03 = 18,
 }
