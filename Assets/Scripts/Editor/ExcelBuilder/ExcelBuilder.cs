@@ -81,7 +81,7 @@ public class ExcelBuilder
             }
             for (int i = 1; i < table.Rows.Count; i++)
             {
-                if(table.Rows[i][0] is DBNull)
+                if (table.Rows[i][0] is DBNull)
                 {
                     continue;
                 }

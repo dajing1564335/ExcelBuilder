@@ -1,16 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace AA
-{
-    public enum ABC
-    {
-        AA,
-        BB,
-        CC,
-    }
-}
-
 public static class MsgAccessor
 {   
     private static Dictionary<MsgLabel, string> _data;
