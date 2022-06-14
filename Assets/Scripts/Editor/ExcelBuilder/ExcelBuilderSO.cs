@@ -14,7 +14,7 @@ public class ExcelBuilderSO : ScriptableObject
         {
             if (!names.Contains(name))
             {
-                if (File.Exists(ExcelBuilder.TableFolder + name))
+                if (Directory.Exists(ExcelBuilder.TableFolder + name))
                 {
                     Directory.Delete(ExcelBuilder.TableFolder + name, true);
                 }
