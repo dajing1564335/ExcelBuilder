@@ -14,6 +14,7 @@ public class ExcelBuilder
     public static string RefFolder = Application.dataPath + "/Resources/Ref/";
     public static string DataFolder = Application.dataPath + "/Resources/ExcelData/";
 
+    static readonly string MsgExcelFolder = Application.dataPath.Replace("Assets", "Data/Message/");
     static readonly string MsgExcelPath = Application.dataPath.Replace("Assets", "Data/Message/Message.xlsx");
     static readonly string TableExcelFolder = Application.dataPath.Replace("Assets", "Data/Table/");
 
@@ -29,74 +30,77 @@ public class ExcelBuilder
     static void BuildMsg()
     {
         CreateFolder();
-        //LoadData
-        var steam = File.OpenRead(MsgExcelPath);
-        var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-        var tables = reader.AsDataSet().Tables;
-        reader.Close();
-        steam.Close();
-
-        //GetLanguage,MsgLabel
         string[] languages = default;
-        List<string> msgLabels = new List<string>();
-        foreach (DataTable table in tables)
+        List<string> msgLabels = new();
+        var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
+        foreach (var file in fileInfos)
         {
-            if (table.Rows.Count == 0 || table.Columns.Count < 2)
+            //LoadData
+            var steam = File.OpenRead(file.FullName);
+            var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
+            var tables = reader.AsDataSet().Tables;
+            reader.Close();
+            steam.Close();
+
+            //GetLanguage,MsgLabel
+            foreach (DataTable table in tables)
             {
-                Debug.LogWarning($"Tabel [{table.TableName}] is skipped.");
-                continue;
-            }
-            if (languages == default)
-            {
-                languages = new string[table.Columns.Count - 1];
-                for (int i = 1; i < table.Columns.Count; i++)
+                if (table.Rows.Count == 0 || table.Columns.Count < 2)
                 {
-                    if (table.Rows[0][i] is DBNull)
+                    Debug.LogWarning($"Tabel [{table.TableName}] is skipped.");
+                    continue;
+                }
+                if (languages == default)
+                {
+                    languages = new string[table.Columns.Count - 1];
+                    for (int i = 1; i < table.Columns.Count; i++)
                     {
-                        Debug.LogError($"Language can not be empty.[{table.TableName}]");
-                        return;
-                    }
-                    var language = table.Rows[0][i].ToString();
-                    for (int j = 0; j < i - 1; j++)
-                    {
-                        if (languages[j] == language)
+                        if (table.Rows[0][i] is DBNull)
                         {
-                            Debug.LogError($"There are same language.[{table.TableName}]");
+                            Debug.LogError($"Language can not be empty.[{file.Name}-{table.TableName}]");
+                            return;
+                        }
+                        var language = table.Rows[0][i].ToString();
+                        for (int j = 0; j < i - 1; j++)
+                        {
+                            if (languages[j] == language)
+                            {
+                                Debug.LogError($"There are same language.[{file.Name}-{table.TableName}]");
+                                return;
+                            }
+                        }
+                        languages[i - 1] = language;
+                    }
+                }
+                else
+                {
+                    for (int i = 1; i < table.Columns.Count; i++)
+                    {
+                        if (languages[i - 1] != table.Rows[0][i].ToString())
+                        {
+                            Debug.LogError($"All message tabel's first row must be the same.[{file.Name}-{table.TableName}]");
                             return;
                         }
                     }
-                    languages[i - 1] = language;
                 }
-            }
-            else
-            {
-                for (int i = 1; i < table.Columns.Count; i++)
+                for (int i = 1; i < table.Rows.Count; i++)
                 {
-                    if (languages[i - 1] != table.Rows[0][i].ToString())
+                    if (table.Rows[i][0] is DBNull)
                     {
-                        Debug.LogError($"All message tabel's first row must be the same.[{table.TableName}]");
+                        continue;
+                    }
+                    var msgLabel = table.Rows[i][0].ToString();
+                    if (msgLabels.Contains(msgLabel))
+                    {
+                        Debug.LogError($"MsgLabel not unique.[{file.Name}-{table.TableName}-{i}-{msgLabel}]");
                         return;
                     }
+                    msgLabels.Add(msgLabel);
                 }
             }
-            for (int i = 1; i < table.Rows.Count; i++)
-            {
-                if (table.Rows[i][0] is DBNull)
-                {
-                    continue;
-                }
-                var msgLabel = table.Rows[i][0].ToString();
-                if (msgLabels.Contains(msgLabel))
-                {
-                    Debug.LogError($"MsgLabel not unique.[{msgLabel}]");
-                    return;
-                }
-                msgLabels.Add(msgLabel);
-            }
+            CreateLanguage(languages);
+            CreateMsgLabel(msgLabels);
         }
-        CreateLanguage(languages);
-        CreateMsgLabel(msgLabels);
-
         var builderData = Resources.Load<ExcelBuilderSO>("Ref/ExcelBuilderData");
         if (!builderData)
         {
@@ -164,20 +168,23 @@ public class ExcelBuilder
             EditorUtility.SetDirty(builderData);
             AssetDatabase.SaveAssets();
         }
-
-        var steam = File.OpenRead(MsgExcelPath);
-        var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-        var tables = reader.AsDataSet().Tables;
-        reader.Close();
-        steam.Close();
-
         var msgData = Resources.Load<MessageSO>("ExcelData/MsgData");
         if (!msgData)
         {
             msgData = ScriptableObject.CreateInstance<MessageSO>();
             AssetDatabase.CreateAsset(msgData, "Assets/Resources/ExcelData/MsgData.asset");
         }
-        msgData.CreateData(tables);
+        msgData.Clear();
+        var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
+        foreach (var file in fileInfos)
+        {
+            var steam = File.OpenRead(file.FullName);
+            var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
+            var tables = reader.AsDataSet().Tables;
+            reader.Close();
+            steam.Close();
+            msgData.AddData(tables);
+        }
         EditorUtility.SetDirty(msgData);
         AssetDatabase.SaveAssets();
 

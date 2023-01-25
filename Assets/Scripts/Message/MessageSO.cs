@@ -6,14 +6,17 @@ public class MessageSO : ScriptableObject
 {
     public SerializableDictionary<Language, SerializableDictionary<MsgLabel, string>> MsgDatas;
 
-    public void CreateData(DataTableCollection tables)
+    public void Clear()
     {
         MsgDatas = new SerializableDictionary<Language, SerializableDictionary<MsgLabel, string>>();
         foreach (Language language in Enum.GetValues(typeof(Language)))
         {
             MsgDatas.Add(language, new SerializableDictionary<MsgLabel, string>());
         }
+    }
 
+    public void AddData(DataTableCollection tables)
+    {
         foreach (DataTable table in tables)
         {
             for (int i = 1; i < table.Rows.Count; i++)
