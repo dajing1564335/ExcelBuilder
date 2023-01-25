@@ -84,9 +84,8 @@ public static class TypeConvert
 
         foreach (var type in types.Split(";"))
         {
-            var t = Type.GetType($"Table.{type}Enum");
-            object retValue;
-            if (t != null && Enum.TryParse(t, value, out retValue))
+            var t = Type.GetType($"Table.{type}");
+            if (t != null && Enum.TryParse(t, value, out object retValue))
             {
                 return (int)retValue;
             }
