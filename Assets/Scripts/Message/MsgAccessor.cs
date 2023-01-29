@@ -19,10 +19,7 @@ public static class MsgAccessor
     public static string GetMessage(MsgLabel msgId)
     {
 #if UNITY_EDITOR
-        if (_data == default)
-        {
-            LoadMsg(0);
-        }
+        _data ??= new Dictionary<MsgLabel, string>(UnityEditor.AssetDatabase.LoadAssetAtPath<MessageSO>("Assets/ExcelData/Data/MsgData.asset").MsgDatas[0]);
 #endif
         return _data[msgId];
     }

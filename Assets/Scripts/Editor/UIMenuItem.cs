@@ -3,24 +3,14 @@ using UnityEngine;
 
 public class UIMenuItem
 {
-    const string TextEx = "Prefabs/ExUI/TextEx";
-    const string ButtonEx = "Prefabs/ExUI/ButtonEx";
-    const string DropdownEx = "Prefabs/ExUI/DropdownEx";
-
-    static Transform GetParent()
-    {
-        var parent = Selection.activeTransform;
-        if (!parent)
-        {
-            parent = GameObject.FindObjectOfType<Canvas>()?.transform;
-        }
-        return parent;
-    }
+    const string TextEx = "Assets/Prefabs/ExUI/TextEx.prefab";
+    const string ButtonEx = "Assets/Prefabs/ExUI/ButtonEx.prefab";
+    const string DropdownEx = "Assets/Prefabs/ExUI/DropdownEx.prefab";
 
     [MenuItem("GameObject/UI/Text - Ex", false, 2001)]
     static void CreateTextEx()
     {
-        GameObject obj = GameObject.Instantiate(Resources.Load<GameObject>(TextEx), GetParent());
+        GameObject obj = Object.Instantiate((GameObject)AssetDatabase.LoadMainAssetAtPath(TextEx), Selection.activeTransform);
         obj.name = "TextEx";
         obj.transform.localPosition = Vector3.zero;
         Selection.activeGameObject = obj;
@@ -29,7 +19,7 @@ public class UIMenuItem
     [MenuItem("GameObject/UI/Button - Ex", false, 2031)]
     static void CreateButtonEx()
     {
-        GameObject obj = GameObject.Instantiate(Resources.Load<GameObject>(ButtonEx), GetParent());
+        GameObject obj = Object.Instantiate((GameObject)AssetDatabase.LoadMainAssetAtPath(ButtonEx), Selection.activeTransform);
         obj.name = "ButtonEx";
         obj.transform.localPosition = Vector3.zero;
         Selection.activeGameObject = obj;
@@ -38,10 +28,9 @@ public class UIMenuItem
     [MenuItem("GameObject/UI/Dropdown - Ex", false, 2036)]
     static void CreateDropdownEx()
     {
-        GameObject obj = GameObject.Instantiate(Resources.Load<GameObject>(DropdownEx), GetParent());
+        GameObject obj = Object.Instantiate((GameObject)AssetDatabase.LoadMainAssetAtPath(DropdownEx), Selection.activeTransform);
         obj.name = "DropdownEx";
         obj.transform.localPosition = Vector3.zero;
         Selection.activeGameObject = obj;
     }
-
 }
