@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class TableAccessorList<T, V>
 {
-    private List<V> _data;
+    private readonly List<V> _data;
 
     public TableAccessorList()
     {
-        var data = Resources.Load<ScriptableObjectBase>($"ExcelData/{typeof(V).Name}");
+        var data = LoadManager.Instance.LoadAsset<ScriptableObjectBase>("table", $"Assets/ExcelData/Data/{typeof(V).Name}.asset");
         if (!data)
         {
             Debug.LogError("No data! Please build data first.");

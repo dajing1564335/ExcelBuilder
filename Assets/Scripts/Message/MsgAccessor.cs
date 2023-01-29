@@ -7,7 +7,7 @@ public static class MsgAccessor
         
     public static void LoadMsg(Language language)
     {
-        var data = Resources.Load<MessageSO>("ExcelData/MsgData");
+        var data = LoadManager.Instance.LoadAsset<MessageSO>("table", "Assets/ExcelData/Data/MsgData.asset");
         if (!data)
         {
             Debug.LogError("No data! Please build data first.");

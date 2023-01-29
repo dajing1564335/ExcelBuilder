@@ -11,11 +11,15 @@ public class ExcelBuilder
 {
     static readonly string MessageFolder = Application.dataPath + "/Scripts/Message/";
     public static string TableFolder = Application.dataPath + "/Scripts/Table/";
-    public static string RefFolder = Application.dataPath + "/Resources/Ref/";
-    public static string DataFolder = Application.dataPath + "/Resources/ExcelData/";
+    public static string RefFolder = Application.dataPath + "/ExcelData/Ref/";
+    public static string DataFolder = Application.dataPath + "/ExcelData/Data/";
 
     static readonly string MsgExcelFolder = Application.dataPath.Replace("Assets", "Data/Message/");
     static readonly string TableExcelFolder = Application.dataPath.Replace("Assets", "Data/Table/");
+
+    const string AssetRefFolder = "Assets/ExcelData/Ref/";
+    const string AssetDataFolder = "Assets/ExcelData/Data/";
+    const string ExcelBuilderDataRefPath = AssetRefFolder + "ExcelBuilderData.asset";
 
     private static void CreateFolder()
     {
@@ -100,11 +104,11 @@ public class ExcelBuilder
             CreateLanguage(languages);
             CreateMsgLabel(msgLabels);
         }
-        var builderData = Resources.Load<ExcelBuilderSO>("Ref/ExcelBuilderData");
+        var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelBuilderDataRefPath);
         if (!builderData)
         {
             builderData = ScriptableObject.CreateInstance<ExcelBuilderSO>();
-            AssetDatabase.CreateAsset(builderData, "Assets/Resources/Ref/ExcelBuilderData.asset");
+            AssetDatabase.CreateAsset(builderData, ExcelBuilderDataRefPath);
         }
         builderData.LoadMsgData = true;
         EditorUtility.SetDirty(builderData);
@@ -130,11 +134,12 @@ public class ExcelBuilder
 
     private static void CreateMsgLabel(List<string> msgLabels)
     {
-        var msgRef = Resources.Load<LabelRefSO>("Ref/MsgRef");
+        var path = AssetRefFolder + "MsgRef.asset";
+        var msgRef = AssetDatabase.LoadAssetAtPath<LabelRefSO>(path);
         if (!msgRef)
         {
             msgRef = ScriptableObject.CreateInstance<LabelRefSO>();
-            AssetDatabase.CreateAsset(msgRef, "Assets/Resources/Ref/MsgRef.asset");
+            AssetDatabase.CreateAsset(msgRef, path);
         }
 
         var code = new StringBuilder();
@@ -155,7 +160,7 @@ public class ExcelBuilder
     [MenuItem("ExcelBuilder/LoadMsgData")]
     private static void CreateMsgData()
     {
-        var builderData = Resources.Load<ExcelBuilderSO>($"Ref/ExcelBuilderData");
+        var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelBuilderDataRefPath);
         if (!builderData)
         {
             Debug.LogError("Please build first.");
@@ -167,11 +172,12 @@ public class ExcelBuilder
             EditorUtility.SetDirty(builderData);
             AssetDatabase.SaveAssets();
         }
-        var msgData = Resources.Load<MessageSO>("ExcelData/MsgData");
+        var path = AssetDataFolder + "MsgData.asset";
+        var msgData = AssetDatabase.LoadAssetAtPath<MessageSO>(path);
         if (!msgData)
         {
             msgData = ScriptableObject.CreateInstance<MessageSO>();
-            AssetDatabase.CreateAsset(msgData, "Assets/Resources/ExcelData/MsgData.asset");
+            AssetDatabase.CreateAsset(msgData, path);
         }
         msgData.Clear();
         var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
@@ -439,11 +445,11 @@ public class ExcelBuilder
         }
         CreateTableAccessor(classInfos);
 
-        var builderData = Resources.Load<ExcelBuilderSO>("Ref/ExcelBuilderData");
+        var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelBuilderDataRefPath);
         if (!builderData)
         {
             builderData = ScriptableObject.CreateInstance<ExcelBuilderSO>();
-            AssetDatabase.CreateAsset(builderData, "Assets/Resources/Ref/ExcelBuilderData.asset");
+            AssetDatabase.CreateAsset(builderData, ExcelBuilderDataRefPath);
         }
         builderData.Updata(folderNames);
         builderData.LoadTableData = true;
@@ -462,12 +468,12 @@ public class ExcelBuilder
         LabelRefSO tabelRef = default;
         if (needRef)
         {
-            var fileName = name + "Ref";
-            tabelRef = Resources.Load<LabelRefSO>($"Ref/{fileName}");
+            var path = AssetRefFolder + name + "Ref.asset";
+            tabelRef = AssetDatabase.LoadAssetAtPath<LabelRefSO>(path);
             if (!tabelRef)
             {
                 tabelRef = ScriptableObject.CreateInstance<LabelRefSO>();
-                AssetDatabase.CreateAsset(tabelRef, $"Assets/Resources/Ref/{fileName}.asset");
+                AssetDatabase.CreateAsset(tabelRef, path);
             }
         }
 
@@ -677,7 +683,7 @@ public class ExcelBuilder
     [MenuItem("ExcelBuilder/LoadTableData")]
     static void CreateTableData()
     {
-        var builderData = Resources.Load<ExcelBuilderSO>($"Ref/ExcelBuilderData");
+        var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelBuilderDataRefPath);
         if (!builderData)
         {
             Debug.LogError("Please build first.");
@@ -708,12 +714,12 @@ public class ExcelBuilder
                 var tableName = GetTableName(table.TableName, file.Name);
 
                 //CreateTableData
-                var assetName = tableName + "Data";
-                var tableData = Resources.Load<ScriptableObjectBase>($"ExcelData/{assetName}");
+                var path = AssetDataFolder + tableName + "Data.asset";
+                var tableData = AssetDatabase.LoadAssetAtPath<ScriptableObjectBase>(path);
                 if (!tableData)
                 {
                     tableData = (ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType(tableName + "SO,Assembly-CSharp"));
-                    AssetDatabase.CreateAsset(tableData, $"Assets/Resources/ExcelData/{assetName}.asset");
+                    AssetDatabase.CreateAsset(tableData, path);
                 }
                 tableData.CreateData(table);
                 EditorUtility.SetDirty(tableData);
@@ -727,7 +733,7 @@ public class ExcelBuilder
     [InitializeOnLoadMethod]
     public static void OnLoadMethod()
     {
-        var builderData = Resources.Load<ExcelBuilderSO>($"Ref/ExcelBuilderData");
+        var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelBuilderDataRefPath);
         if (!builderData || !(builderData.LoadMsgData || builderData.LoadTableData))
         {
             return;
