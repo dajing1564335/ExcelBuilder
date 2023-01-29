@@ -3,32 +3,78 @@ using UnityEngine;
 
 public class LoadManager : SingletonMonoBehaviour<LoadManager>
 {
+    [System.Serializable]
+    public class AssetBundleInfo
+    {
+        [SerializeField]
+        AssetBundle _assetBundle;
+        [SerializeField]
+        int _count;
+
+        public AssetBundle AssetBundle => _assetBundle;
+
+        public AssetBundleInfo(AssetBundle assetBundle, int count)
+        {
+            _assetBundle = assetBundle;
+            _count = count;
+        }
+
+        public void Add()
+        {
+            _count++;
+        }
+
+        public bool Dec()
+        {
+            return --_count <= 0;
+        }
+    }
+
     public static readonly string StreamFolderWindows = Application.streamingAssetsPath + "/Windows/";
 
 #if UNITY_EDITOR
     [SerializeField]
     private bool LoadFromAssetBundle;
     [SerializeField]
-    private SerializableDictionary<string, AssetBundle> _assetBundles = new();
+    private SerializableDictionary<string, AssetBundleInfo> _assetBundles = new();
 #else
-    private readonly Dictionary<string, AssetBundle> _assetBundles = new();
+    private readonly Dictionary<string, AssetBundleInfo> _assetBundles = new();
 #endif
 
-    private AssetBundle LoadAssetBundle(string name)
+    AssetBundleManifest _manifest;
+
+    protected override void Awake()
     {
-        if (!_assetBundles.TryGetValue(name, out var ab))
+        base.Awake();
+        var ab = AssetBundle.LoadFromFile(StreamFolderWindows + "Windows");
+        _manifest = ab.LoadAsset<AssetBundleManifest>("AssetbundleManifest");
+        ab.Unload(false);
+    }
+
+    private AssetBundle LoadAssetBundle(string name, bool dependency)
+    {
+        if (!_assetBundles.TryGetValue(name, out var info))
         {
-            ab = AssetBundle.LoadFromFile(StreamFolderWindows + name);
-            if (ab)
+            var asset = AssetBundle.LoadFromFile(StreamFolderWindows + name);
+            if (asset)
             {
-                _assetBundles.Add(name, ab);
+                info = new AssetBundleInfo(asset, dependency ? 1 : 0);
+                _assetBundles.Add(name, info);
+                foreach (var sub in _manifest.GetAllDependencies(name))
+                {
+                    LoadAssetBundle(sub, true);
+                }
             }
             else
             {
-                Debug.LogError($"Load AssetBundle Error. --{name}");
+                Debug.LogError($"Load AssetBundle Error. [{name}]");
             }
         }
-        return ab;
+        else if (dependency)
+        {
+            info.Add();
+        }
+        return info.AssetBundle;
     }
 
     public T LoadAsset<T>(string abName, string path) where T : Object
@@ -39,15 +85,22 @@ public class LoadManager : SingletonMonoBehaviour<LoadManager>
             return UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
         }
 #endif
-        return LoadAssetBundle(abName).LoadAsset<T>(path);
+        return LoadAssetBundle(abName, false).LoadAsset<T>(path);
     }
 
-    public void UnloadAssetBundle(string name, bool unloadObj = false)
+    public void UnloadAssetBundle(string name, bool dependency = false, bool unload = false)
     {
-        if (_assetBundles.TryGetValue(name, out var ab))
+        if (_assetBundles.TryGetValue(name, out var info))
         {
-            ab.Unload(unloadObj);
-            _assetBundles.Remove(name);
+            if (!dependency || info.Dec())
+            {
+                info.AssetBundle.Unload(unload);
+                _assetBundles.Remove(name);
+            }
+            foreach (var sub in _manifest.GetAllDependencies(name))
+            {
+                UnloadAssetBundle(sub, true, unload);
+            }
         }
     }
 }
