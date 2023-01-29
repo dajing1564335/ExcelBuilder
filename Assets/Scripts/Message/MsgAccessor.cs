@@ -9,7 +9,8 @@ public static class MsgAccessor
         
     public static void LoadMsg(Language language)
     {
-        var data = LoadManager.Instance.LoadAsset<MessageSO>("table", MsgDataPath);
+        var data = LoadManager.Instance.LoadAsset<MessageSO>("msg", MsgDataPath);
+        LoadManager.Instance.UnloadAssetBundle("msg");
         if (!data)
         {
             Debug.LogError("No data! Please build data first.");

@@ -178,6 +178,7 @@ public class ExcelBuilder
         {
             msgData = ScriptableObject.CreateInstance<MessageSO>();
             AssetDatabase.CreateAsset(msgData, path);
+            AssetImporter.GetAtPath(path).assetBundleName = "msg";
         }
         msgData.Clear();
         var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
@@ -673,6 +674,7 @@ public class ExcelBuilder
         {
             code.AppendLine($"\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data>();");
         }
+        code.AppendLine("\t\tLoadManager.Instance.UnloadAssetBundle(\"table\"); ");
         code.AppendLine("\t}");
         code.AppendLine("}");
 
@@ -726,6 +728,8 @@ public class ExcelBuilder
                 AssetDatabase.SaveAssets();
             }
         }
+        var importer = AssetImporter.GetAtPath("Assets/ExcelData/Data");
+        importer.assetBundleName = "table";
         Debug.Log("Load table data end.");
     }
     #endregion
