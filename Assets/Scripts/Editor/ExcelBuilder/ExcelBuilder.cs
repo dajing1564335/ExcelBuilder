@@ -620,10 +620,10 @@ public class ExcelBuilder
                 StringBuilder code = new StringBuilder();
                 if (field.SubClass == null)
                 {
-                    code.Append($"TypeConvert.GetValue<{field.Type}>(table.Rows[i][{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}].ToString()");
+                    code.Append($"TypeConvert.GetValue<{field.Type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}]");
                     for (int i = 1; i < TypeConvert.SupportType[field.Type]; i++)
                     {
-                        code.Append($", table.Rows[i][{(loop < 0 ? index + i : $"j{loop} + {i + j}")}].ToString()");
+                        code.Append($", row[{(loop < 0 ? index + i : $"j{loop} + {i + j}")}]");
                     }
                     code.Append(")");
                     return code.ToString();
@@ -636,7 +636,7 @@ public class ExcelBuilder
                 }
                 return code.ToString();
             }
-            return $"TypeConvert.GetValue(table.Rows[i][{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}].ToString(), \"{field.Type}\")";
+            return $"TypeConvert.GetValue(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}], \"{field.Type}\")";
         }
 
         string GetFieldCode(int index, Field field, string dataName, int j, int loop)
@@ -655,7 +655,7 @@ public class ExcelBuilder
             loop++;
             code.AppendLine($"{space}for (int j{loop} = {(loop == 0 ? index : $"j{loop - 1} + {j}")}; j{loop} < {(loop == 0 ? index + field.ListCount * field.ListItemLength : $"j{loop - 1} + {j + field.ListCount * field.ListItemLength}")}; j{loop} += {field.ListItemLength})");
             code.AppendLine($"{space}{{");
-            code.AppendLine($"{space}\tif (table.Rows[i][j{loop}] is System.DBNull)");
+            code.AppendLine($"{space}\tif (row[j{loop}] is System.DBNull)");
             code.AppendLine($"{space}\t{{");
             code.AppendLine($"{space}\t\tbreak;");
             code.AppendLine($"{space}\t}}");
@@ -687,7 +687,8 @@ public class ExcelBuilder
         code.AppendLine($"\t\tDatas = new {type}();");
         code.AppendLine("\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t{");
-        code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull)");
+        code.AppendLine("\t\t\tvar row = table.Rows[i];");
+        code.AppendLine("\t\t\tif (row[0] is System.DBNull)");
         code.AppendLine("\t\t\t{");
         code.AppendLine("\t\t\t\tcontinue;");
         code.AppendLine("\t\t\t}");
@@ -702,7 +703,7 @@ public class ExcelBuilder
         code.Append("\t\t\tDatas.Add(");
         if (needRef)
         {
-            code.Append($"(Table.{name})System.Enum.Parse(typeof(Table.{name}), table.Rows[i][0].ToString()), ");
+            code.Append($"(Table.{name})System.Enum.Parse(typeof(Table.{name}), row[0].ToString()), ");
         }
         code.AppendLine($"data);");
         code.AppendLine("\t\t}");
