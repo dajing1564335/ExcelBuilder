@@ -386,7 +386,7 @@ public class ExcelBuilder
             else
             {
                 var typeList = type.Split(";");
-                var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
+                var isBaseType = TypeConvert.SupportType.ContainsKey(typeList[0]);
                 if (typeList.Length == 1)
                 {
                     if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
@@ -409,14 +409,23 @@ public class ExcelBuilder
                 field = new Field(type, name, isBaseType);
                 if (startIndex + 1 < table.Columns.Count && table.Rows[0][startIndex + 1].ToString() == "[")
                 {
-                    field.ListItemLength = 1;
+                    field.ListItemLength = isBaseType ? TypeConvert.SupportType[typeList[0]] : 1;
                     var count = GetEmptyCount(startIndex + 2, table, index);
                     if (count == -1)
                     {
                         return null;
                     }
-                    field.ListCount += count + 1;
-                    field.FieldLength = field.ListCount + 1;
+                    if ((count + 2) % field.ListItemLength != 0)
+                    {
+                        Debug.LogError($"{typeList[0]} count is not correct! [{fileInfos[index].Name} - {table.TableName} - {field.Name}");
+                        return null;
+                    }
+                    field.ListCount = (count + 2) / field.ListItemLength;
+                    field.FieldLength = field.ListCount * field.ListItemLength + 1;
+                }
+                else
+                {
+                    field.FieldLength = isBaseType ? TypeConvert.SupportType[typeList[0]] : 1;
                 }
             }
             return field;
@@ -578,6 +587,7 @@ public class ExcelBuilder
         Directory.CreateDirectory(folder);
 
         code.AppendLine("using System.Collections.Generic;");
+        code.AppendLine("using UnityEngine;");
         code.AppendLine();
         code.AppendLine("namespace Table");
         code.AppendLine("{");
@@ -607,11 +617,17 @@ public class ExcelBuilder
         {
             if (field.IsBaseType)
             {
+                StringBuilder code = new StringBuilder();
                 if (field.SubClass == null)
                 {
-                    return $"TypeConvert.GetValue<{field.Type}>(table.Rows[i][{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}].ToString())";
+                    code.Append($"TypeConvert.GetValue<{field.Type}>(table.Rows[i][{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}].ToString()");
+                    for (int i = 1; i < TypeConvert.SupportType[field.Type]; i++)
+                    {
+                        code.Append($", table.Rows[i][{(loop < 0 ? index + i : $"j{loop} + {i + j}")}].ToString()");
+                    }
+                    code.Append(")");
+                    return code.ToString();
                 }
-                var code = new StringBuilder();
                 code.AppendLine($"{GetSpace(4 + loop)}Table.{field.Type} {field.Name} = new();");
                 foreach (var f in field.SubClass)
                 {
@@ -658,6 +674,7 @@ public class ExcelBuilder
         var code = new StringBuilder();
         code.AppendLine("using System.Collections.Generic;");
         code.AppendLine("using System.Data;");
+        code.AppendLine("using UnityEngine;");
         code.AppendLine();
         code.AppendLine($"public class {name}SO : ScriptableObjectBase");
         code.AppendLine("{");

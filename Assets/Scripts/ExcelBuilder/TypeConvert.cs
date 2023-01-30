@@ -5,7 +5,19 @@ using System;
 public static class TypeConvert
 {
 #if UNITY_EDITOR
-    public static readonly List<string> SupportType = new() { "int", "float", "bool", "string", "char", "MsgLabel" };
+    public static readonly Dictionary<string, int> SupportType = new()
+    {
+        ["int"] = 1,
+        ["float"] = 1,
+        ["bool"] = 1,
+        ["string"] = 1,
+        ["char"] = 1,
+        ["MsgLabel"] = 1,
+        ["Vector3"] = 3,
+        ["Vector3Int"] = 3,
+        ["Vector2"] = 2,
+        ["Vector2Int"] = 2,
+    };
 
     public static T GetValue<T>(string value)
     {
@@ -66,6 +78,36 @@ public static class TypeConvert
                 return (T)retValue;
             }
             Debug.LogError($"{value} is not a [{typeof(T).Name}].");
+        }
+
+        return default;
+    }
+
+    public static T GetValue<T>(string value1, string value2)
+    {
+        if (typeof(T) == typeof(Vector2))
+        {
+            return (T)(object)new Vector2(GetValue<float>(value1), GetValue<float>(value2));
+        }
+
+        if (typeof(T) == typeof(Vector2Int))
+        {
+            return (T)(object)new Vector2Int(GetValue<int>(value1), GetValue<int>(value2));
+        }
+
+        return default;
+    }
+
+    public static T GetValue<T>(string value1, string value2, string value3)
+    {
+        if (typeof(T) == typeof(Vector3))
+        {
+            return (T)(object)new Vector3(GetValue<float>(value1), GetValue<float>(value2), GetValue<float>(value3));
+        }
+
+        if (typeof(T) == typeof(Vector3Int))
+        {
+            return (T)(object)new Vector3Int(GetValue<int>(value1), GetValue<int>(value2), GetValue<int>(value3));
         }
 
         return default;

@@ -12,5 +12,6 @@ public class AssetBundleBuilder : MonoBehaviour
         Directory.CreateDirectory(Application.streamingAssetsPath);
         Directory.CreateDirectory(StreamFolderWindows);
         BuildPipeline.BuildAssetBundles(StreamFolderWindows, BuildAssetBundleOptions.ChunkBasedCompression, BuildTarget.StandaloneWindows64);
+        AssetDatabase.Refresh();
     }
 }
