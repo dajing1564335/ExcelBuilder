@@ -4,6 +4,7 @@ using System;
 
 public static class TypeConvert
 {
+#if UNITY_EDITOR
     public static readonly List<string> SupportType = new() { "int", "float", "bool", "string", "char", "MsgLabel" };
 
     public static T GetValue<T>(string value)
@@ -98,4 +99,5 @@ public static class TypeConvert
         Debug.LogError($"[{value}] is not in [{types}]");
         return default;
     }
+#endif
 }

@@ -21,6 +21,41 @@ public class ExcelBuilder
     const string AssetDataFolder = "Assets/ExcelData/Data/";
     const string ExcelBuilderDataRefPath = AssetRefFolder + "ExcelBuilderData.asset";
 
+    #region RemoveComment
+    private static void RemoveComment(DataTable table)
+    {
+        foreach (DataRow row in table.Rows)
+        {
+            if (row[0].ToString() == "comment")
+            {
+                row.Delete();
+            }
+        }
+        table.AcceptChanges();
+        int i = 0;
+        while (i < table.Columns.Count)
+        {
+            if (table.Rows[0][i].ToString() == "comment")
+            {
+                table.Columns.RemoveAt(i);
+            }
+            else
+            {
+                i++;
+            }
+        }
+    }
+
+    private static DataTableCollection RemoveComment(DataTableCollection tables)
+    {
+        foreach (DataTable table in tables)
+        {
+            RemoveComment(table);
+        }
+        return tables;
+    }
+    #endregion
+
     private static void CreateFolder()
     {
         Directory.CreateDirectory(TableFolder);
@@ -41,7 +76,7 @@ public class ExcelBuilder
             //LoadData
             var steam = File.OpenRead(file.FullName);
             var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = reader.AsDataSet().Tables;
+            var tables = RemoveComment(reader.AsDataSet().Tables);
             reader.Close();
             steam.Close();
 
@@ -186,7 +221,7 @@ public class ExcelBuilder
         {
             var steam = File.OpenRead(file.FullName);
             var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = reader.AsDataSet().Tables;
+            var tables = RemoveComment(reader.AsDataSet().Tables);
             reader.Close();
             steam.Close();
             msgData.AddData(tables);
@@ -249,7 +284,7 @@ public class ExcelBuilder
             //LoadData
             var steam = File.OpenRead(file.FullName);
             var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = reader.AsDataSet().Tables;
+            var tables = RemoveComment(reader.AsDataSet().Tables);
             excelData.Add(tables);
             reader.Close();
             steam.Close();
@@ -263,7 +298,7 @@ public class ExcelBuilder
                 List<string> labels = new();
                 for (int i = 2; i < table.Rows.Count; i++)
                 {
-                    if (table.Rows[i][0] is DBNull || table.Rows[i][0].ToString() == "comment")
+                    if (table.Rows[i][0] is DBNull)
                     {
                         continue;
                     }
@@ -629,12 +664,13 @@ public class ExcelBuilder
         var type = (needRef ? $"SerializableDictionary<Table.{name}, " : "List<") + $"Table.{name}Data>";
         code.AppendLine($"\tpublic {type} Datas;");
         code.AppendLine();
+        code.AppendLine("#if UNITY_EDITOR");
         code.AppendLine("\tpublic override void CreateData(DataTable table)");
         code.AppendLine("\t{");
         code.AppendLine($"\t\tDatas = new {type}();");
         code.AppendLine("\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t{");
-        code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull || table.Rows[i][0].ToString() == \"comment\")");
+        code.AppendLine("\t\t\tif (table.Rows[i][0] is System.DBNull)");
         code.AppendLine("\t\t\t{");
         code.AppendLine("\t\t\t\tcontinue;");
         code.AppendLine("\t\t\t}");
@@ -654,6 +690,7 @@ public class ExcelBuilder
         code.AppendLine($"data);");
         code.AppendLine("\t\t}");
         code.AppendLine("\t}");
+        code.AppendLine("#endif");
         code.AppendLine("}");
         File.WriteAllText(TableFolder + name + "/" + name + "SO.cs", code.ToString());
     }
@@ -703,7 +740,7 @@ public class ExcelBuilder
             //LoadData
             var steam = File.OpenRead(file.FullName);
             var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = reader.AsDataSet().Tables;
+            var tables = RemoveComment(reader.AsDataSet().Tables);
             reader.Close();
             steam.Close();
 
