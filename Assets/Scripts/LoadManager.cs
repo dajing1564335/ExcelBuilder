@@ -46,6 +46,12 @@ public class LoadManager : SingletonMonoBehaviour<LoadManager>
     protected override void Awake()
     {
         base.Awake();
+#if UNITY_EDITOR
+        if (!LoadFromAssetBundle)
+        {
+            return;
+        }
+#endif
         var ab = AssetBundle.LoadFromFile(StreamFolderWindows + "Windows");
         _manifest = ab.LoadAsset<AssetBundleManifest>("AssetbundleManifest");
         ab.Unload(false);
