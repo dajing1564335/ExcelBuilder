@@ -24,7 +24,6 @@ public static class EnumUtil
 
     public static T GetRandom<T>() where T : struct
     {
-        var array = GetEnumArray<T>();
-        return array[UnityEngine.Random.Range(0, array.Length)];
+        return ListUtil.GetRandom(GetEnumArray<T>());
     }
 }
