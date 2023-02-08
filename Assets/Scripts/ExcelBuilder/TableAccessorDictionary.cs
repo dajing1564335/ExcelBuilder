@@ -1,32 +1,35 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TableAccessorDictionary<T, V>
+namespace Table
 {
-    private readonly Dictionary<T, V> _data;
-
-    public TableAccessorDictionary()
+    public class TableAccessorDictionary<T, V>
     {
-        var data = LoadManager.Instance.LoadAsset<ScriptableObjectBase>("table", $"Assets/ExcelData/Data/{typeof(V).Name}.asset");
-        if (!data)
+        private readonly Dictionary<T, V> _data;
+
+        public TableAccessorDictionary()
         {
-            Debug.LogError("No data! Please build data first.");
-            return;
+            var data = LoadManager.Instance.LoadAsset<ScriptableObjectBase>("table", $"Assets/ExcelData/Data/{typeof(V).Name}.asset");
+            if (!data)
+            {
+                Debug.LogError("No data! Please build data first.");
+                return;
+            }
+            _data = new Dictionary<T, V>((SerializableDictionary<T, V>)data.GetType().GetField("Datas").GetValue(data));
         }
-        _data = new Dictionary<T, V>((SerializableDictionary<T, V>)data.GetType().GetField("Datas").GetValue(data));
-    }
 
-    public V this[int index] => _data[(T)(object)index];
+        public V this[int index] => _data[(T)(object)index];
 
-    public V this[T label] => _data[label];
+        public V this[T label] => _data[label];
 
-    public int Count => _data.Count;
+        public int Count => _data.Count;
 
-    public IEnumerator<V> GetEnumerator()
-    {
-        foreach (var data in _data.Values)
+        public IEnumerator<V> GetEnumerator()
         {
-            yield return data;
+            foreach (var data in _data.Values)
+            {
+                yield return data;
+            }
         }
     }
 }

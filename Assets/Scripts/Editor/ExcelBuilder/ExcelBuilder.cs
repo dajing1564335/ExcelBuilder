@@ -553,7 +553,7 @@ public class ExcelBuilder
     {
         string GetType(Field field)
         {
-            var type = field.IsBaseType ? field.Type : "int";
+            var type = field.Type.Contains(';') ? "int" : field.Type;
             return field.ListCount < 2 ? type : $"List<{type}>";
         }
 
@@ -628,7 +628,7 @@ public class ExcelBuilder
                     code.Append(")");
                     return code.ToString();
                 }
-                code.AppendLine($"{GetSpace(4 + loop)}Table.{field.Type} {field.Name} = new();");
+                code.AppendLine($"{GetSpace(5 + loop)}{field.Type} {field.Name} = new();");
                 foreach (var f in field.SubClass)
                 {
                     code.AppendLine(GetFieldCode(index + j + 1, f, field.Name, loop < 0 ? j : f.ListCount > 1 || f.SubClass != null ? j + 1 : j, loop));
@@ -636,12 +636,16 @@ public class ExcelBuilder
                 }
                 return code.ToString();
             }
-            return $"TypeConvert.GetValue(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}], \"{field.Type}\")";
+            if (field.Type.Contains(';'))
+            {
+                return $"TypeConvert.GetValue(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}], \"{field.Type}\")";
+            }
+            return $"TypeConvert.GetValue<{field.Type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}])";
         }
 
         string GetFieldCode(int index, Field field, string dataName, int j, int loop)
         {
-            var space = GetSpace(4 + loop);
+            var space = GetSpace(5 + loop);
             if (field.ListCount < 2)
             {
                 if (!field.IsBaseType || field.SubClass == null)
@@ -676,39 +680,42 @@ public class ExcelBuilder
         code.AppendLine("using System.Data;");
         code.AppendLine("using UnityEngine;");
         code.AppendLine();
-        code.AppendLine($"public class {name}SO : ScriptableObjectBase");
+        code.AppendLine("namespace Table");
         code.AppendLine("{");
-        var type = (needRef ? $"SerializableDictionary<Table.{name}, " : "List<") + $"Table.{name}Data>";
-        code.AppendLine($"\tpublic {type} Datas;");
+        code.AppendLine($"\tpublic class {name}SO : ScriptableObjectBase");
+        code.AppendLine("\t{");
+        var type = (needRef ? $"SerializableDictionary<{name}, " : "List<") + $"{name}Data>";
+        code.AppendLine($"\t\tpublic {type} Datas;");
         code.AppendLine();
         code.AppendLine("#if UNITY_EDITOR");
-        code.AppendLine("\tpublic override void CreateData(DataTable table)");
-        code.AppendLine("\t{");
-        code.AppendLine($"\t\tDatas = new {type}();");
-        code.AppendLine("\t\tfor (int i = 2; i < table.Rows.Count; i++)");
+        code.AppendLine("\t\tpublic override void CreateData(DataTable table)");
         code.AppendLine("\t\t{");
-        code.AppendLine("\t\t\tvar row = table.Rows[i];");
-        code.AppendLine("\t\t\tif (row[0] is System.DBNull)");
+        code.AppendLine($"\t\t\tDatas = new {type}();");
+        code.AppendLine("\t\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t\t{");
-        code.AppendLine("\t\t\t\tcontinue;");
-        code.AppendLine("\t\t\t}");
+        code.AppendLine("\t\t\t\tvar row = table.Rows[i];");
+        code.AppendLine("\t\t\t\tif (row[0] is System.DBNull)");
+        code.AppendLine("\t\t\t\t{");
+        code.AppendLine("\t\t\t\t\tcontinue;");
+        code.AppendLine("\t\t\t\t}");
 
         int index = 1;
-        code.AppendLine($"\t\t\tTable.{name}Data data = new();");
+        code.AppendLine($"\t\t\t\t{name}Data data = new();");
         foreach (var field in fields)
         {
             code.AppendLine(GetFieldCode(index, field, "data", 0, -1));
             index += field.FieldLength;
         }
-        code.Append("\t\t\tDatas.Add(");
+        code.Append("\t\t\t\tDatas.Add(");
         if (needRef)
         {
-            code.Append($"(Table.{name})System.Enum.Parse(typeof(Table.{name}), row[0].ToString()), ");
+            code.Append($"({name})System.Enum.Parse(typeof({name}), row[0].ToString()), ");
         }
         code.AppendLine($"data);");
+        code.AppendLine("\t\t\t}");
         code.AppendLine("\t\t}");
-        code.AppendLine("\t}");
         code.AppendLine("#endif");
+        code.AppendLine("\t}");
         code.AppendLine("}");
         File.WriteAllText(TableFolder + name + "/" + name + "SO.cs", code.ToString());
     }
@@ -716,20 +723,23 @@ public class ExcelBuilder
     private static void CreateTableAccessor(List<ClassInfo> infos)
     {
         var code = new StringBuilder();
-        code.AppendLine("public static class TableAccessor");
+        code.AppendLine("namespace Table");
         code.AppendLine("{");
-        foreach (var info in infos)
-        {
-            code.AppendLine($"\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data> {info.Name};");
-        }
-        code.AppendLine();
-        code.AppendLine("\tpublic static void LoadData()");
+        code.AppendLine("\tpublic static class TableAccessor");
         code.AppendLine("\t{");
         foreach (var info in infos)
         {
-            code.AppendLine($"\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data>();");
+            code.AppendLine($"\t\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<{info.Name}, {info.Name}Data> {info.Name};");
         }
-        code.AppendLine("\t\tLoadManager.Instance.UnloadAssetBundle(\"table\"); ");
+        code.AppendLine();
+        code.AppendLine("\t\tpublic static void LoadData()");
+        code.AppendLine("\t\t{");
+        foreach (var info in infos)
+        {
+            code.AppendLine($"\t\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<{info.Name}, {info.Name}Data>();");
+        }
+        code.AppendLine("\t\t\tLoadManager.Instance.UnloadAssetBundle(\"table\"); ");
+        code.AppendLine("\t\t}");
         code.AppendLine("\t}");
         code.AppendLine("}");
 
@@ -772,10 +782,10 @@ public class ExcelBuilder
 
                 //CreateTableData
                 var path = AssetDataFolder + tableName + "Data.asset";
-                var tableData = AssetDatabase.LoadAssetAtPath<ScriptableObjectBase>(path);
+                var tableData = AssetDatabase.LoadAssetAtPath<Table.ScriptableObjectBase>(path);
                 if (!tableData)
                 {
-                    tableData = (ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType(tableName + "SO,Assembly-CSharp"));
+                    tableData = (Table.ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType(tableName + "SO,Assembly-CSharp"));
                     AssetDatabase.CreateAsset(tableData, path);
                 }
                 tableData.CreateData(table);
