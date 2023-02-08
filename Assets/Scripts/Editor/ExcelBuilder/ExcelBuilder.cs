@@ -387,7 +387,7 @@ public class ExcelBuilder
             {
                 var typeList = type.Split(";");
                 var isBaseType = TypeConvert.SupportType.ContainsKey(typeList[0]);
-                if (typeList.Length == 1)
+                if (typeList.Length == 1 || type[^1] == ';')
                 {
                     if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
                     {
@@ -723,23 +723,22 @@ public class ExcelBuilder
     private static void CreateTableAccessor(List<ClassInfo> infos)
     {
         var code = new StringBuilder();
-        code.AppendLine("namespace Table");
+        code.AppendLine("using Table;");
+        code.AppendLine();
+        code.AppendLine("public static class TableAccessor");
         code.AppendLine("{");
-        code.AppendLine("\tpublic static class TableAccessor");
+        foreach (var info in infos)
+        {
+            code.AppendLine($"\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<{info.Name}, {info.Name}Data> {info.Name};");
+        }
+        code.AppendLine();
+        code.AppendLine("\tpublic static void LoadData()");
         code.AppendLine("\t{");
         foreach (var info in infos)
         {
-            code.AppendLine($"\t\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<{info.Name}, {info.Name}Data> {info.Name};");
+            code.AppendLine($"\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<{info.Name}, {info.Name}Data>();");
         }
-        code.AppendLine();
-        code.AppendLine("\t\tpublic static void LoadData()");
-        code.AppendLine("\t\t{");
-        foreach (var info in infos)
-        {
-            code.AppendLine($"\t\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<{info.Name}, {info.Name}Data>();");
-        }
-        code.AppendLine("\t\t\tLoadManager.Instance.UnloadAssetBundle(\"table\"); ");
-        code.AppendLine("\t\t}");
+        code.AppendLine("\t\tLoadManager.Instance.UnloadAssetBundle(\"table\"); ");
         code.AppendLine("\t}");
         code.AppendLine("}");
 
