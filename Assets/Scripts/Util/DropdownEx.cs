@@ -3,8 +3,10 @@ using UnityEngine.UI;
 
 public class DropdownEx : Dropdown
 {
-    [SerializeField]
+    [SerializeField, SearchableEnum]
     private MsgLabel[] _labels;
+
+    public MsgLabel[] Labels => _labels;
 
     protected override void Start()
     {

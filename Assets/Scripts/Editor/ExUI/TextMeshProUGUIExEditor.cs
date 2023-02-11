@@ -1,13 +1,13 @@
+using TMPro.EditorUtilities;
 using UnityEditor;
-using UnityEditor.UI;
 
-[CustomEditor(typeof(TextEx))]
-public class TextExEditor : TextEditor
+[CustomEditor(typeof(TextMeshProUGUIEx))]
+public class TextMeshProUGUIExEditor : TMP_EditorPanelUI
 {
     public override void OnInspectorGUI()
     {
         EditorGUILayout.PropertyField(serializedObject.FindProperty("_label"));
-        var textEx = (TextEx)target;
+        var textEx = (TextMeshProUGUIEx)target;
         textEx.text = MsgAccessor.GetMessage(textEx.Label);
         base.OnInspectorGUI();
     }

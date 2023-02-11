@@ -1,7 +1,7 @@
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class TextEx : Text
+public class TextMeshProUGUIEx : TextMeshProUGUI
 {
     [SerializeField, SearchableEnum]
     private MsgLabel _label;
