@@ -133,6 +133,14 @@ namespace util
         }
     }
     
+    public class Vector2ValueAnim : ValueAnim<Vector2>
+    {
+        public override Vector2 CalValue()
+        {
+            return start + (end - start) * GetRate();
+        }
+    }
+
     public class FloatValueAnim : ValueAnim<float>
     {
         public override float CalValue()
