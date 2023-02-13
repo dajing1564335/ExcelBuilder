@@ -723,20 +723,18 @@ public class ExcelBuilder
     private static void CreateTableAccessor(List<ClassInfo> infos)
     {
         var code = new StringBuilder();
-        code.AppendLine("using Table;");
-        code.AppendLine();
         code.AppendLine("public static class TableAccessor");
         code.AppendLine("{");
         foreach (var info in infos)
         {
-            code.AppendLine($"\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<{info.Name}, {info.Name}Data> {info.Name};");
+            code.AppendLine($"\tpublic static Table.TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data> {info.Name};");
         }
         code.AppendLine();
         code.AppendLine("\tpublic static void LoadData()");
         code.AppendLine("\t{");
         foreach (var info in infos)
         {
-            code.AppendLine($"\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<{info.Name}, {info.Name}Data>();");
+            code.AppendLine($"\t\t{info.Name} = new Table.TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data>();");
         }
         code.AppendLine("\t\tLoadManager.Instance.UnloadAssetBundle(\"table\"); ");
         code.AppendLine("\t}");
