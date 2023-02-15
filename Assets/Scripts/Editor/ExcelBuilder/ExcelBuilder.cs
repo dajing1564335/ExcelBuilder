@@ -782,7 +782,7 @@ public class ExcelBuilder
                 var tableData = AssetDatabase.LoadAssetAtPath<Table.ScriptableObjectBase>(path);
                 if (!tableData)
                 {
-                    tableData = (Table.ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType(tableName + "SO,Assembly-CSharp"));
+                    tableData = (Table.ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType($"Table.{tableName}SO,Assembly-CSharp"));
                     AssetDatabase.CreateAsset(tableData, path);
                 }
                 tableData.CreateData(table);
