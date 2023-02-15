@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class LabelRefSO : ScriptableObject
 {
-    public SerializableDictionary<string, int> LabelRef = new SerializableDictionary<string, int>();
+    public SerializableDictionary<string, int> LabelRef = new();
     public int MaxId = 0;
 
     public int GetId(string label)

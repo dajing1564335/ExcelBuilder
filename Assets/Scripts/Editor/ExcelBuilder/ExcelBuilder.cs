@@ -617,7 +617,7 @@ public class ExcelBuilder
         {
             if (field.IsBaseType)
             {
-                StringBuilder code = new StringBuilder();
+                StringBuilder code = new();
                 if (field.SubClass == null)
                 {
                     code.Append($"TypeConvert.GetValue<{field.Type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}]");
