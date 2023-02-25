@@ -7,6 +7,20 @@ public static class ExtensionMethods
     {
         return list[Random.Range(0, list.Count)];
     }
+    public static T GetRandom<T>(this T[] array)
+    {
+        return array[Random.Range(0, array.Length)];
+    }
+    public static T GetRandom<T>(this ICollection<T> collection)
+    {
+        var index = Random.Range(0, collection.Count);
+        var enumerator = collection.GetEnumerator();
+        for (int i = 0; i < index; i++)
+        {
+            enumerator.MoveNext();
+        }
+        return enumerator.Current;
+    }
 
     public static T TakeRandom<T>(this List<T> list)
     {
@@ -14,20 +28,5 @@ public static class ExtensionMethods
         var value = list[index];
         list.RemoveAt(index);
         return value;
-    }
-
-    public static T GetRandom<T>(this T[] array)
-    {
-        return array[Random.Range(0, array.Length)];
-    }
-    public static T GetRandom<T, V>(this Dictionary<T, V>.KeyCollection keys)
-    {
-        var index = Random.Range(0, keys.Count);
-        var enumerator = keys.GetEnumerator();
-        for (int i = 0; i < index; i++)
-        {
-            enumerator.MoveNext();
-        }
-        return enumerator.Current;
     }
 }
