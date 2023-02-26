@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-public class AssetBundleBuilder : MonoBehaviour
+public class AssetBundleBuilder
 {
     static readonly string StreamFolderWindows = Application.streamingAssetsPath + "/Windows/";
 
