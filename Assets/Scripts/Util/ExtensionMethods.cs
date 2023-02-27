@@ -29,4 +29,17 @@ public static class ExtensionMethods
         list.RemoveAt(index);
         return value;
     }
+
+    public static void Swap<T>(this List<T> list, int index1, int index2)
+    {
+        var temp = list[index1];
+        list[index1] = list[index2];
+        list[index2] = temp;
+    }
+    public static void Swap<T>(this T[] array, int index1, int index2)
+    {
+        var temp = array[index1];
+        array[index1] = array[index2];
+        array[index2] = temp;
+    }
 }
