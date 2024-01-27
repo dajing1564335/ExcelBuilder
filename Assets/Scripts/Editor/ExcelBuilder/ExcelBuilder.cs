@@ -11,14 +11,14 @@ public class ExcelBuilder
 {
     static readonly string MessageFolder = Application.dataPath + "/Scripts/Message/";
     public static string TableFolder = Application.dataPath + "/Scripts/Table/";
-    public static string RefFolder = Application.dataPath + "/ExcelData/Ref/";
-    public static string DataFolder = Application.dataPath + "/ExcelData/Data/";
+    public static string RefFolder = Application.dataPath + "/Resources/ExcelData/Ref/";
+    public static string DataFolder = Application.dataPath + "/Resources/ExcelData/Data/";
 
     static readonly string MsgExcelFolder = Application.dataPath.Replace("Assets", "Data/Message/");
     static readonly string TableExcelFolder = Application.dataPath.Replace("Assets", "Data/Table/");
 
-    const string AssetRefFolder = "Assets/ExcelData/Ref/";
-    const string AssetDataFolder = "Assets/ExcelData/Data/";
+    const string AssetRefFolder = "Assets/Resources/ExcelData/Ref/";
+    const string AssetDataFolder = "Assets/Resources/ExcelData/Data/";
     const string ExcelBuilderDataRefPath = AssetRefFolder + "ExcelBuilderData.asset";
 
     #region RemoveComment
@@ -213,7 +213,6 @@ public class ExcelBuilder
         {
             msgData = ScriptableObject.CreateInstance<MessageSO>();
             AssetDatabase.CreateAsset(msgData, path);
-            AssetImporter.GetAtPath(path).assetBundleName = "msg";
         }
         msgData.Clear();
         var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
@@ -736,7 +735,6 @@ public class ExcelBuilder
         {
             code.AppendLine($"\t\t{info.Name} = new Table.TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data>();");
         }
-        code.AppendLine("\t\tLoadManager.Instance.UnloadAssetBundle(\"table\"); ");
         code.AppendLine("\t}");
         code.AppendLine("}");
 
@@ -790,8 +788,6 @@ public class ExcelBuilder
                 AssetDatabase.SaveAssets();
             }
         }
-        var importer = AssetImporter.GetAtPath("Assets/ExcelData/Data");
-        importer.assetBundleName = "table";
         Debug.Log("Load table data end.");
     }
     #endregion

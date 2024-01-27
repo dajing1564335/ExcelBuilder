@@ -9,13 +9,14 @@ namespace Table
 
         public TableAccessorList()
         {
-            var data = LoadManager.Instance.LoadAsset<ScriptableObjectBase>("table", $"Assets/ExcelData/Data/{typeof(V).Name}.asset");
+            var data = Resources.Load<ScriptableObjectBase>($"ExcelData/Data/{typeof(V).Name}");
             if (!data)
             {
                 Debug.LogError("No data! Please build data first.");
                 return;
             }
             _data = new List<V>((List<V>)data.GetType().GetField("Datas").GetValue(data));
+            Resources.UnloadAsset(data);
         }
 
         public V this[int index] => _data[index];
