@@ -1,11 +1,11 @@
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using ExcelDataReader;
-using System.Data;
 using System.Collections.Generic;
 using System;
 using System.Text;
+using System.Linq;
+using Table;
 
 public class ExcelBuilder
 {
@@ -14,53 +14,55 @@ public class ExcelBuilder
     public static string RefFolder = Application.dataPath + "/Resources/ExcelData/Ref/";
     public static string DataFolder = Application.dataPath + "/Resources/ExcelData/Data/";
 
-    static readonly string MsgExcelFolder = Application.dataPath.Replace("Assets", "Data/Message/");
-    static readonly string TableExcelFolder = Application.dataPath.Replace("Assets", "Data/Table/");
+    static readonly string MsgCsvFolder = Application.dataPath.Replace("Assets", "Data/Message/csv/");
+    static readonly string TableCsvFolder = Application.dataPath.Replace("Assets", "Data/Table/csv/");
 
     const string AssetRefFolder = "Assets/Resources/ExcelData/Ref/";
     const string AssetDataFolder = "Assets/Resources/ExcelData/Data/";
     const string ExcelBuilderDataRefPath = AssetRefFolder + "ExcelBuilderData.asset";
-
-    #region RemoveComment
-    private static void RemoveComment(DataTable table)
-    {
-        foreach (DataRow row in table.Rows)
-        {
-            if (row[0].ToString() == "comment")
-            {
-                row.Delete();
-            }
-        }
-        table.AcceptChanges();
-        int i = 0;
-        while (i < table.Columns.Count)
-        {
-            if (table.Rows[0][i].ToString() == "comment")
-            {
-                table.Columns.RemoveAt(i);
-            }
-            else
-            {
-                i++;
-            }
-        }
-    }
-
-    private static DataTableCollection RemoveComment(DataTableCollection tables)
-    {
-        foreach (DataTable table in tables)
-        {
-            RemoveComment(table);
-        }
-        return tables;
-    }
-    #endregion
 
     private static void CreateFolder()
     {
         Directory.CreateDirectory(TableFolder);
         Directory.CreateDirectory(RefFolder);
         Directory.CreateDirectory(DataFolder);
+    }
+
+    private static CsvDataTable LoadCsvToCsvDataTable(FileInfo info)
+    {
+        CsvDataTable tabel = new()
+        {
+            TableName = info.Name.Replace(".csv", ""),
+            Rows = new()
+        };
+        if (File.Exists(info.FullName))
+        {
+            var csv = File.ReadAllText(info.FullName).Split("\r\n");
+            for (int i = 0; i < csv.Length - 1; i++)
+            {
+                var line = csv[i].Split(',');
+                if (line[0] != "comment")
+                {
+                    tabel.Rows.Add(line.ToList());
+                }
+            }
+            if (tabel.Rows.Count > 0)
+            {
+                for (int i = 0; i < tabel.Rows[0].Count;)
+                {
+                    if (tabel.Rows[0][i] == "comment")
+                    {
+                        for (int j = 0; j < tabel.Rows.Count; j++)
+                        {
+                            tabel.Rows[j].RemoveAt(i);
+                        }
+                        continue;
+                    }
+                    i++;
+                }
+            }
+        }
+        return tabel;
     }
 
     #region BuildMsg
@@ -70,75 +72,67 @@ public class ExcelBuilder
         CreateFolder();
         string[] languages = default;
         List<string> msgLabels = new();
-        var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
+        var fileInfos = Directory.CreateDirectory(MsgCsvFolder).GetFiles("*.csv", SearchOption.AllDirectories);
         foreach (var file in fileInfos)
         {
-            //LoadData
-            var steam = File.OpenRead(file.FullName);
-            var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = RemoveComment(reader.AsDataSet().Tables);
-            reader.Close();
-            steam.Close();
+            var table = LoadCsvToCsvDataTable(file);
 
             //GetLanguage,MsgLabel
-            foreach (DataTable table in tables)
+            if (table.Rows.Count < 2 || table.Columns.Count < 2)
             {
-                if (table.Rows.Count == 0 || table.Columns.Count < 2)
+                Debug.LogWarning($"Tabel [{file.Name}] is skipped.");
+                continue;
+            }
+            if (languages == default)
+            {
+                languages = new string[table.Columns.Count - 1];
+                for (int i = 1; i < table.Columns.Count; i++)
                 {
-                    Debug.LogWarning($"Tabel [{table.TableName}] is skipped.");
-                    continue;
-                }
-                if (languages == default)
-                {
-                    languages = new string[table.Columns.Count - 1];
-                    for (int i = 1; i < table.Columns.Count; i++)
+                    if (table.Rows[0][i] == string.Empty)
                     {
-                        if (table.Rows[0][i] is DBNull)
-                        {
-                            Debug.LogError($"Language can not be empty.[{file.Name}-{table.TableName}]");
-                            return;
-                        }
-                        var language = table.Rows[0][i].ToString();
-                        for (int j = 0; j < i - 1; j++)
-                        {
-                            if (languages[j] == language)
-                            {
-                                Debug.LogError($"There are same language.[{file.Name}-{table.TableName}]");
-                                return;
-                            }
-                        }
-                        languages[i - 1] = language;
-                    }
-                }
-                else
-                {
-                    for (int i = 1; i < table.Columns.Count; i++)
-                    {
-                        if (languages[i - 1] != table.Rows[0][i].ToString())
-                        {
-                            Debug.LogError($"All message tabel's first row must be the same.[{file.Name}-{table.TableName}]");
-                            return;
-                        }
-                    }
-                }
-                for (int i = 1; i < table.Rows.Count; i++)
-                {
-                    if (table.Rows[i][0] is DBNull)
-                    {
-                        continue;
-                    }
-                    var msgLabel = table.Rows[i][0].ToString();
-                    if (msgLabels.Contains(msgLabel))
-                    {
-                        Debug.LogError($"MsgLabel not unique.[{file.Name}-{table.TableName}-{msgLabel}]");
+                        Debug.LogError($"Language can not be empty.[{file.Name}]");
                         return;
                     }
-                    msgLabels.Add(msgLabel);
+                    var language = table.Rows[0][i];
+                    for (int j = 0; j < i - 1; j++)
+                    {
+                        if (languages[j] == language)
+                        {
+                            Debug.LogError($"There are same language.[{file.Name}]");
+                            return;
+                        }
+                    }
+                    languages[i - 1] = language;
                 }
             }
-            CreateLanguage(languages);
-            CreateMsgLabel(msgLabels);
+            else
+            {
+                for (int i = 1; i < table.Columns.Count; i++)
+                {
+                    if (languages[i - 1] != table.Rows[0][i])
+                    {
+                        Debug.LogError($"All message tabel's first row must be the same.[{file.Name}]");
+                        return;
+                    }
+                }
+            }
+            for (int i = 1; i < table.Rows.Count; i++)
+            {
+                if (table.Rows[i][0] == string.Empty)
+                {
+                    continue;
+                }
+                var msgLabel = table.Rows[i][0];
+                if (msgLabels.Contains(msgLabel))
+                {
+                    Debug.LogError($"MsgLabel not unique.[{file.Name}-{table.TableName}-{msgLabel}]");
+                    return;
+                }
+                msgLabels.Add(msgLabel);
+            }
         }
+        CreateLanguage(languages);
+        CreateMsgLabel(msgLabels);
         var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelBuilderDataRefPath);
         if (!builderData)
         {
@@ -215,20 +209,14 @@ public class ExcelBuilder
             AssetDatabase.CreateAsset(msgData, path);
         }
         msgData.Clear();
-        var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
+        var fileInfos = Directory.CreateDirectory(MsgCsvFolder).GetFiles("*.csv", SearchOption.AllDirectories);
         foreach (var file in fileInfos)
         {
-            var steam = File.OpenRead(file.FullName);
-            var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = RemoveComment(reader.AsDataSet().Tables);
-            reader.Close();
-            steam.Close();
-            msgData.AddData(tables);
+            msgData.AddData(LoadCsvToCsvDataTable(file));
         }
         EditorUtility.SetDirty(msgData);
         AssetDatabase.SaveAssets();
 
-        AssetDatabase.Refresh();
         Debug.Log("Load msg data end.");
     }
     #endregion
@@ -236,13 +224,13 @@ public class ExcelBuilder
     #region BuildTable
     class Field
     {
-        public string Type;
-        public string Name;
-        public int FieldLength = 1;
-        public int ListCount = 1;
-        public int ListItemLength;
-        public bool IsBaseType;
-        public List<Field> SubClass;
+        public string Type;             //当前字段的类型
+        public string Name;             //当前字段的那名字
+        public int FieldLength = 1;     //当前字段类型所需的列数，--Vector3就是3
+        public int ListCount = 1;       //是数组的话，数组的长度
+        public int ListItemLength;      //是数组的话，数组成员字段类型所需的列数
+        public bool IsBaseType;         //是基础类型吗
+        public List<Field> SubClass;    //是在表中定义的子类的话，子类包含的所有字段
 
         public Field(string types, string name, bool isBaseType)
         {
@@ -250,11 +238,6 @@ public class ExcelBuilder
             Name = name;
             IsBaseType = isBaseType;
         }
-    }
-
-    static string GetTableName(string name, string fileName)
-    {
-        return name == "Sheet1" ? fileName.Replace(".xlsx", string.Empty) : name;
     }
 
     struct ClassInfo
@@ -274,55 +257,56 @@ public class ExcelBuilder
     {
         CreateFolder();
 
-        List<string> folderNames = new();
-        List<DataTableCollection> excelData = new();
+        List<string> tableNames = new();
+        List<CsvDataTable> csvData = new();
 
-        var fileInfos = Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
+        #region Create Table Enum
+        var fileInfos = Directory.CreateDirectory(TableCsvFolder).GetFiles("*.csv", SearchOption.AllDirectories);
         foreach (var file in fileInfos)
         {
             //LoadData
-            var steam = File.OpenRead(file.FullName);
-            var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = RemoveComment(reader.AsDataSet().Tables);
-            excelData.Add(tables);
-            reader.Close();
-            steam.Close();
-            
-            foreach (DataTable table in tables)
+            var table = LoadCsvToCsvDataTable(file);
+            if (table.Rows.Count < 3 || table.Columns.Count < 2)
             {
-                if (table.Columns.Count == 0 || table.Rows.Count < 2)
+                Debug.LogWarning($"Tabel [{file.Name}] is skipped.");
+                continue;
+            }
+            csvData.Add(table);
+            List<string> labels = new();
+            for (int i = 2; i < table.Rows.Count; i++)
+            {
+                if (table.Rows[i][0] == string.Empty)
                 {
                     continue;
                 }
-                List<string> labels = new();
-                for (int i = 2; i < table.Rows.Count; i++)
+                var label = table.Rows[i][0];
+                if (labels.Contains(label))
                 {
-                    if (table.Rows[i][0] is DBNull)
-                    {
-                        continue;
-                    }
-                    var label = table.Rows[i][0].ToString();
-                    if (labels.Contains(label))
-                    {
-                        Debug.LogError($"Label not unique.[{file.Name}-{label}]");
-                        return;
-                    }
-                    labels.Add(label);
+                    Debug.LogError($"Label not unique.[{file.Name}-{label}]");
+                    return;
                 }
-                var folderName = GetTableName(table.TableName, file.Name);
-                CreateTableEnum(folderName, labels, table.Rows[0][0].ToString() == "ref");
-
-                folderNames.Add(folderName);
+                labels.Add(label);
+            }
+            if (tableNames.Contains(table.TableName))
+            {
+                Debug.LogError($"Table not unique.[{file.Name}]");
+                return;
+            }
+            else
+            {
+                CreateTableEnum(table.TableName, labels, table.Rows[0][0].ToString() == "ref");
+                tableNames.Add(table.TableName);
             }
         }
-        //-------------------------------------------------------------------------------------------------------------
-        
-        int GetEmptyCount(int startIndex, DataTable table, int index)
+        #endregion
+
+        //获得表格第一行startIndex列之后空白格数
+        int GetEmptyCount(int startIndex, CsvDataTable table)
         {
             int count = 0;
             for (int i = startIndex; i < table.Columns.Count; i++)
             {
-                var type = table.Rows[0][i].ToString();
+                var type = table.Rows[0][i];
                 if (type == "]")
                 {
                     return count;
@@ -333,33 +317,34 @@ public class ExcelBuilder
                 }
                 else
                 {
-                    Debug.LogError($"Miss \"]\" at [{fileInfos[index].Name} - {table.TableName}]");
+                    Debug.LogError($"Miss \"]\" at [{table.TableName}] - (0,{i})");
                     return -1;
                 }
             }
-            Debug.LogError($"Miss \"]\" at [{fileInfos[index].Name} - {table.TableName}]");
+            Debug.LogError($"Miss \"]\" at [{table.TableName}]");
             return -1;
         }
 
-        Field GetField(int startIndex, DataTable table, int index)
+        //获得表格从startIndex开始的类的第一个字段
+        Field GetField(int startIndex, CsvDataTable table)
         {
             Field field;
-            var type = table.Rows[0][startIndex].ToString();
+            var type = table.Rows[0][startIndex];
             if (type == string.Empty)
             {
-                Debug.LogError($"Table has empty type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex})]");
+                Debug.LogError($"Table has empty type! [{table.TableName} - (0,{startIndex})]");
                 return null;
             }
-            var name = table.Rows[1][startIndex].ToString();
+            var name = table.Rows[1][startIndex];
             if (name == string.Empty)
             {
-                Debug.LogError($"Table has empty field! [{fileInfos[index].Name} - {table.TableName} - (1,{startIndex})]");
+                Debug.LogError($"Table has empty field! [{table.TableName} - (1,{startIndex})]");
                 return null;
             }
             if (type == "class[")
             {
-                field = new Field($"{GetTableName(table.TableName, fileInfos[index].Name)}{table.Rows[1][startIndex]}", table.Rows[1][startIndex].ToString(), true);
-                var fields = GetFields(startIndex + 1, table, index, true);
+                field = new Field($"{table.TableName}{table.Rows[1][startIndex]}", table.Rows[1][startIndex], true);
+                var fields = GetFields(startIndex + 1, table, true);
                 if (fields == null)
                 {
                     return null;
@@ -369,14 +354,14 @@ public class ExcelBuilder
                 {
                     field.ListItemLength += f.FieldLength;
                 }
-                var count = GetEmptyCount(startIndex + 1 + field.ListItemLength, table, index);
+                var count = GetEmptyCount(startIndex + 1 + field.ListItemLength, table);
                 if (count == -1)
                 {
                     return null;
                 }
                 if (count % field.ListItemLength != 0)
                 {
-                    Debug.LogError($"SubClass count is not correct! [{fileInfos[index].Name} - {table.TableName} - {field.Name}");
+                    Debug.LogError($"SubClass count is not correct! [{table.TableName} - {field.Name}");
                     return null;
                 }
                 field.ListCount += count / field.ListItemLength;
@@ -388,9 +373,9 @@ public class ExcelBuilder
                 var isBaseType = TypeConvert.SupportType.ContainsKey(typeList[0]);
                 if (typeList.Length == 1 || type[^1] == ';')
                 {
-                    if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
+                    if (!isBaseType && !tableNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
                     {
-                        Debug.LogError($"There are not support type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex}) - {typeList[0]}]");
+                        Debug.LogError($"There are not support type! [{table.TableName} - (0,{startIndex}) - {typeList[0]}]");
                         return null;
                     }
                 }
@@ -398,7 +383,7 @@ public class ExcelBuilder
                 {
                     foreach (var t in typeList)
                     {
-                        if (!folderNames.Contains(t) && Type.GetType($"{t},Assembly-CSharp") == null)
+                        if (!tableNames.Contains(t) && Type.GetType($"{t},Assembly-CSharp") == null)
                         {
                             Debug.LogError($"Muilt type must be table enum! [{type}-{t}]");
                             return null;
@@ -406,17 +391,17 @@ public class ExcelBuilder
                     }
                 }
                 field = new Field(type, name, isBaseType);
-                if (startIndex + 1 < table.Columns.Count && table.Rows[0][startIndex + 1].ToString() == "[")
+                if (startIndex + 1 < table.Columns.Count && table.Rows[0][startIndex + 1] == "[")
                 {
                     field.ListItemLength = isBaseType ? TypeConvert.SupportType[typeList[0]] : 1;
-                    var count = GetEmptyCount(startIndex + 2, table, index);
+                    var count = GetEmptyCount(startIndex + 2, table);
                     if (count == -1)
                     {
                         return null;
                     }
                     if ((count + 2) % field.ListItemLength != 0)
                     {
-                        Debug.LogError($"{typeList[0]} count is not correct! [{fileInfos[index].Name} - {table.TableName} - {field.Name}");
+                        Debug.LogError($"{typeList[0]} count is not correct! [{table.TableName} - {field.Name}");
                         return null;
                     }
                     field.ListCount = (count + 2) / field.ListItemLength;
@@ -430,20 +415,22 @@ public class ExcelBuilder
             return field;
         }
 
-        List<Field> GetFields(int startIndex, DataTable table, int index, bool sub = false)
+        //获得表格从startIndex开始的类的所有字段
+        List<Field> GetFields(int startIndex, CsvDataTable table, bool sub = false)
         {
             List<Field> fields = new();
             while (startIndex < table.Columns.Count)
             {
                 if (sub)
                 {
-                    var type = table.Rows[0][startIndex].ToString();
+                    var type = table.Rows[0][startIndex];
+                    //子类的字段定义在第一个空格或者]处停止
                     if (type == string.Empty || type == "]")
                     {
                         return fields;
                     }
                 }
-                var field = GetField(startIndex, table, index);
+                var field = GetField(startIndex, table);
                 if (field == null)
                 {
                     return null;
@@ -461,31 +448,19 @@ public class ExcelBuilder
         //CreateDataClass
         List<ClassInfo> classInfos = new();
 
-        for (int index = 0; index < fileInfos.Length; ++index)
+        foreach (var table in csvData)
         {
-            foreach (DataTable table in excelData[index])
+            List<Field> fields = GetFields(1, table);
+            if (fields == null)
             {
-                if (table.Columns.Count < 2 || table.Rows.Count < 2)
-                {
-                    continue;
-                }
-                List<Field> fields = GetFields(1, table, index);
-                if (fields == null)
-                {
-                    return;
-                }
-                var tableName = GetTableName(table.TableName, fileInfos[index].Name);
-                if (!folderNames.Contains(tableName))
-                {
-                    folderNames.Add(tableName);
-                }
-
-                CreateTableDataClass(tableName, fields);
-                var dic = table.Rows[0][0].ToString() == "ref";
-                CreateTableSO(tableName, fields, dic);
-
-                classInfos.Add(new ClassInfo(tableName, dic));
+                continue;
             }
+
+            CreateTableDataClass(table.TableName, fields);
+            var dic = table.Rows[0][0] == "ref";
+            CreateTableSO(table.TableName, fields, dic);
+
+            classInfos.Add(new ClassInfo(table.TableName, dic));
         }
         CreateTableAccessor(classInfos);
 
@@ -495,7 +470,7 @@ public class ExcelBuilder
             builderData = ScriptableObject.CreateInstance<ExcelBuilderSO>();
             AssetDatabase.CreateAsset(builderData, ExcelBuilderDataRefPath);
         }
-        builderData.Updata(folderNames);
+        builderData.Updata(tableNames);
         builderData.LoadTableData = true;
         EditorUtility.SetDirty(builderData);
         AssetDatabase.SaveAssets();
@@ -658,7 +633,7 @@ public class ExcelBuilder
             loop++;
             code.AppendLine($"{space}for (int j{loop} = {(loop == 0 ? index : $"j{loop - 1} + {j}")}; j{loop} < {(loop == 0 ? index + field.ListCount * field.ListItemLength : $"j{loop - 1} + {j + field.ListCount * field.ListItemLength}")}; j{loop} += {field.ListItemLength})");
             code.AppendLine($"{space}{{");
-            code.AppendLine($"{space}\tif (row[j{loop}] is System.DBNull)");
+            code.AppendLine($"{space}\tif (row[j{loop}] == string.Empty)");
             code.AppendLine($"{space}\t{{");
             code.AppendLine($"{space}\t\tbreak;");
             code.AppendLine($"{space}\t}}");
@@ -676,7 +651,6 @@ public class ExcelBuilder
 
         var code = new StringBuilder();
         code.AppendLine("using System.Collections.Generic;");
-        code.AppendLine("using System.Data;");
         code.AppendLine("using UnityEngine;");
         code.AppendLine();
         code.AppendLine("namespace Table");
@@ -687,13 +661,13 @@ public class ExcelBuilder
         code.AppendLine($"\t\tpublic {type} Datas;");
         code.AppendLine();
         code.AppendLine("#if UNITY_EDITOR");
-        code.AppendLine("\t\tpublic override void CreateData(DataTable table)");
+        code.AppendLine("\t\tpublic override void CreateData(CsvDataTable table)");
         code.AppendLine("\t\t{");
         code.AppendLine($"\t\t\tDatas = new {type}();");
         code.AppendLine("\t\t\tfor (int i = 2; i < table.Rows.Count; i++)");
         code.AppendLine("\t\t\t{");
         code.AppendLine("\t\t\t\tvar row = table.Rows[i];");
-        code.AppendLine("\t\t\t\tif (row[0] is System.DBNull)");
+        code.AppendLine("\t\t\t\tif (row[0] == string.Empty)");
         code.AppendLine("\t\t\t\t{");
         code.AppendLine("\t\t\t\t\tcontinue;");
         code.AppendLine("\t\t\t\t}");
@@ -758,35 +732,25 @@ public class ExcelBuilder
             AssetDatabase.SaveAssets();
         }
 
-        foreach (var file in Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories))
+        foreach (var file in Directory.CreateDirectory(TableCsvFolder).GetFiles("*.csv", SearchOption.AllDirectories))
         {
             //LoadData
-            var steam = File.OpenRead(file.FullName);
-            var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = RemoveComment(reader.AsDataSet().Tables);
-            reader.Close();
-            steam.Close();
-
-            foreach (DataTable table in tables)
+            var table = LoadCsvToCsvDataTable(file);
+            if (table.Rows.Count < 3 || table.Columns.Count < 2)
             {
-                if (table.Columns.Count < 2 || table.Rows.Count < 3)
-                {
-                    continue;
-                }
-                var tableName = GetTableName(table.TableName, file.Name);
-
-                //CreateTableData
-                var path = AssetDataFolder + tableName + "Data.asset";
-                var tableData = AssetDatabase.LoadAssetAtPath<Table.ScriptableObjectBase>(path);
-                if (!tableData)
-                {
-                    tableData = (Table.ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType($"Table.{tableName}SO,Assembly-CSharp"));
-                    AssetDatabase.CreateAsset(tableData, path);
-                }
-                tableData.CreateData(table);
-                EditorUtility.SetDirty(tableData);
-                AssetDatabase.SaveAssets();
+                continue;
             }
+            //CreateTableData
+            var path = AssetDataFolder + table.TableName + "Data.asset";
+            var tableData = AssetDatabase.LoadAssetAtPath<Table.ScriptableObjectBase>(path);
+            if (!tableData)
+            {
+                tableData = (Table.ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType($"Table.{table.TableName}SO,Assembly-CSharp"));
+                AssetDatabase.CreateAsset(tableData, path);
+            }
+            tableData.CreateData(table);
+            EditorUtility.SetDirty(tableData);
+            AssetDatabase.SaveAssets();
         }
         Debug.Log("Load table data end.");
     }
