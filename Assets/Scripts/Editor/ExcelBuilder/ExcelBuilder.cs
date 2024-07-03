@@ -6,6 +6,7 @@ using System.Data;
 using System.Collections.Generic;
 using System;
 using System.Text;
+using System.Linq;
 
 public class ExcelBuilder
 {
@@ -70,11 +71,11 @@ public class ExcelBuilder
         CreateFolder();
         string[] languages = default;
         List<string> msgLabels = new();
-        var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
+        var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden));
         foreach (var file in fileInfos)
         {
             //LoadData
-            var steam = File.OpenRead(file.FullName);
+            var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
             var tables = RemoveComment(reader.AsDataSet().Tables);
             reader.Close();
@@ -215,10 +216,10 @@ public class ExcelBuilder
             AssetDatabase.CreateAsset(msgData, path);
         }
         msgData.Clear();
-        var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
+        var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden));
         foreach (var file in fileInfos)
         {
-            var steam = File.OpenRead(file.FullName);
+            var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
             var tables = RemoveComment(reader.AsDataSet().Tables);
             reader.Close();
@@ -277,11 +278,11 @@ public class ExcelBuilder
         List<string> folderNames = new();
         List<DataTableCollection> excelData = new();
 
-        var fileInfos = Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories);
+        var fileInfos = Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)).ToArray();
         foreach (var file in fileInfos)
         {
             //LoadData
-            var steam = File.OpenRead(file.FullName);
+            var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
             var tables = RemoveComment(reader.AsDataSet().Tables);
             excelData.Add(tables);
@@ -758,10 +759,11 @@ public class ExcelBuilder
             AssetDatabase.SaveAssets();
         }
 
-        foreach (var file in Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories))
+        var fileInfos = Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden));
+        foreach (var file in fileInfos)
         {
             //LoadData
-            var steam = File.OpenRead(file.FullName);
+            var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
             var tables = RemoveComment(reader.AsDataSet().Tables);
             reader.Close();
