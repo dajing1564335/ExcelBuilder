@@ -1,10 +1,10 @@
-#if UNITY_EDITOR
 using UnityEngine;
 using System.Collections.Generic;
 using System;
 
 public static class TypeConvert
 {
+#if UNITY_EDITOR
     public static readonly Dictionary<string, int> SupportType = new()
     {
         ["int"] = 1,
@@ -19,8 +19,13 @@ public static class TypeConvert
         ["Vector2Int"] = 2,
     };
 
-    public static T GetValue<T>(string value)
+    public static T GetValue<T>(object valueObj)
     {
+        if (valueObj is DBNull)
+        {
+            return default;
+        }
+        var value = valueObj.ToString();
         if (value == string.Empty)
         {
             return default;
@@ -83,7 +88,7 @@ public static class TypeConvert
         return default;
     }
 
-    public static T GetValue<T>(string value1, string value2)
+    public static T GetValue<T>(object value1, object value2)
     {
         if (typeof(T) == typeof(Vector2))
         {
@@ -98,7 +103,7 @@ public static class TypeConvert
         return default;
     }
 
-    public static T GetValue<T>(string value1, string value2, string value3)
+    public static T GetValue<T>(object value1, object value2, object value3)
     {
         if (typeof(T) == typeof(Vector3))
         {
@@ -113,8 +118,13 @@ public static class TypeConvert
         return default;
     }
 
-    public static int GetValue(string value, string types)
+    public static int GetValue(object valueObj, string types)
     {
+        if (valueObj is DBNull)
+        {
+            return default;
+        }
+        var value = valueObj.ToString();
         if (value == string.Empty)
         {
             return default;
@@ -141,5 +151,5 @@ public static class TypeConvert
         Debug.LogError($"[{value}] is not in [{types}]");
         return default;
     }
-}
 #endif
+}

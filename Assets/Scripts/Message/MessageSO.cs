@@ -1,11 +1,11 @@
 using UnityEngine;
 using System;
+using System.Data;
 
 public class MessageSO : ScriptableObject
 {
     public SerializableDictionary<Language, SerializableDictionary<MsgLabel, string>> MsgDatas;
 
-#if UNITY_EDITOR
     public void Clear()
     {
         MsgDatas = new SerializableDictionary<Language, SerializableDictionary<MsgLabel, string>>();
@@ -15,20 +15,22 @@ public class MessageSO : ScriptableObject
         }
     }
 
-    public void AddData(Table.CsvDataTable table)
+    public void AddData(DataTableCollection tables)
     {
-        for (int i = 1; i < table.Rows.Count; i++)
+        foreach (DataTable table in tables)
         {
-            if (table.Rows[i][0] == string.Empty)
+            for (int i = 1; i < table.Rows.Count; i++)
             {
-                continue;
-            }
-            MsgLabel msgLabel = (MsgLabel)Enum.Parse(typeof(MsgLabel), table.Rows[i][0]);
-            for (int j = 1; j < table.Columns.Count; j++)
-            {
-                MsgDatas[(Language)(j - 1)].Add(msgLabel, table.Rows[i][j]);
+                if (table.Rows[i][0] is DBNull)
+                {
+                    continue;
+                }
+                MsgLabel msgLabel = (MsgLabel)Enum.Parse(typeof(MsgLabel), table.Rows[i][0].ToString());
+                for (int j = 1; j < table.Columns.Count; j++)
+                {
+                    MsgDatas[(Language)(j - 1)].Add(msgLabel, table.Rows[i][j].ToString());
+                }
             }
         }
     }
-#endif
 }
