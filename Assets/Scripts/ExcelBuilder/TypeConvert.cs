@@ -1,10 +1,10 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using System.Collections.Generic;
 using System;
 
 public static class TypeConvert
 {
-#if UNITY_EDITOR
     public static readonly Dictionary<string, int> SupportType = new()
     {
         ["int"] = 1,
@@ -151,5 +151,5 @@ public static class TypeConvert
         Debug.LogError($"[{value}] is not in [{types}]");
         return default;
     }
-#endif
 }
+#endif
