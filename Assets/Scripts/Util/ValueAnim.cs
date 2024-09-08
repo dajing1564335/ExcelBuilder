@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define DelayCallback
+
+using System;
 using UnityEngine;
 
 namespace util
@@ -63,7 +65,11 @@ namespace util
             timer += Time.deltaTime;
             if (timer >= time)
             {
+#if DelayCallback
                 DelayInvoke();
+#else
+                _callBack?.Invoke();
+#endif
                 return end;
             }
             return CalValue();
@@ -118,11 +124,13 @@ namespace util
 
         public abstract T CalValue();
 
+#if DelayCallback
         private async void DelayInvoke()
         {
             await System.Threading.Tasks.Task.Yield();
             _callBack?.Invoke();
         }
+#endif
     }
 
     public class Vector3ValueAnim : ValueAnim<Vector3>
