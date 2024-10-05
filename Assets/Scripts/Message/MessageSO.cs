@@ -6,6 +6,7 @@ public class MessageSO : ScriptableObject
 {
     public SerializableDictionary<Language, SerializableDictionary<MsgLabel, string>> MsgDatas;
 
+#if UNITY_EDITOR
     public void Clear()
     {
         MsgDatas = new SerializableDictionary<Language, SerializableDictionary<MsgLabel, string>>();
@@ -33,4 +34,5 @@ public class MessageSO : ScriptableObject
             }
         }
     }
+#endif
 }

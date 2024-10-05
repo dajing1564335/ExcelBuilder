@@ -26,4 +26,9 @@ public static class EnumUtil
     {
         return GetEnumArray<T>().GetRandom();
     }
+
+    public static void Release()
+    {
+        _enumArrays.Clear();
+    }
 }

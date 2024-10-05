@@ -32,14 +32,10 @@ public static class ExtensionMethods
 
     public static void Swap<T>(this List<T> list, int index1, int index2)
     {
-        var temp = list[index1];
-        list[index1] = list[index2];
-        list[index2] = temp;
+        (list[index2], list[index1]) = (list[index1], list[index2]);
     }
     public static void Swap<T>(this T[] array, int index1, int index2)
     {
-        var temp = array[index1];
-        array[index1] = array[index2];
-        array[index2] = temp;
+        (array[index2], array[index1]) = (array[index1], array[index2]);
     }
 }
