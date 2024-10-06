@@ -1,7 +1,7 @@
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
-public class DropdownEx : Dropdown
+public class DropdownEx : TMP_Dropdown
 {
     [SerializeField, SearchableEnum]
     private MsgLabel[] _labels;

@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using TMPro.EditorUtilities;
 using UnityEditor;
 
 [CustomEditor(typeof(DropdownEx))]
-public class DropdownExEditor : Editor
+public class DropdownExEditor : DropdownEditor
 {
     public override void OnInspectorGUI()
     {
@@ -16,6 +17,7 @@ public class DropdownExEditor : Editor
         dropdownEx.ClearOptions();
         dropdownEx.AddOptions(strings);
         dropdownEx.captionText.text = strings.Count > 0 ? strings[0] : string.Empty;
+        serializedObject.ApplyModifiedProperties();
         base.OnInspectorGUI();
     }
 }
