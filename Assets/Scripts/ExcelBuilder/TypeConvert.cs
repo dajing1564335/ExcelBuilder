@@ -135,20 +135,41 @@ public static class TypeConvert
             return intValue;
         }
 
-        foreach (var type in types.Split(";"))
+        var index = value.IndexOf('.');
+        if (index == -1)
         {
+            foreach (var type in types.Split(";"))
+            {
+                var t = Type.GetType($"Table.{type}");
+                if (t != null && Enum.TryParse(t, value, out object retValue))
+                {
+                    return (int)retValue;
+                }
+                t = Type.GetType(type);
+                if (t != null && Enum.TryParse(t, value, out retValue))
+                {
+                    return (int)retValue;
+                }
+            }
+            Debug.LogError($"[{value}] is not in [{types}]");
+        }
+        else
+        {
+            var type = value[..index];
+            var newValue = value[(index + 1)..];
             var t = Type.GetType($"Table.{type}");
-            if (t != null && Enum.TryParse(t, value, out object retValue))
+            if (t != null && Enum.TryParse(t, newValue, out object retValue))
             {
                 return (int)retValue;
             }
             t = Type.GetType(type);
-            if (t != null && Enum.TryParse(t, value, out retValue))
+            if (t != null && Enum.TryParse(t, newValue, out retValue))
             {
                 return (int)retValue;
             }
+            Debug.LogError($"[{newValue}] is not in [{type}]");
         }
-        Debug.LogError($"[{value}] is not in [{types}]");
+
         return default;
     }
 }

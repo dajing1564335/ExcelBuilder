@@ -273,6 +273,8 @@ public class ExcelBuilder
     [MenuItem("ExcelBuilder/BuildTableAndLoad")]
     private static void BuildTables()
     {
+        List<string> warningLogs = new();
+
         CreateFolder();
 
         List<string> folderNames = new();
@@ -397,12 +399,50 @@ public class ExcelBuilder
                 }
                 else
                 {
-                    foreach (var t in typeList)
+                    //check enum add duplicates name
+                    List<string[]> enumNames = new(typeList.Length);
+                    for (var i = 0; i < typeList.Length; i++)
                     {
-                        if (!folderNames.Contains(t) && Type.GetType($"{t},Assembly-CSharp") == null)
+                        if (folderNames.Contains(typeList[i]))
                         {
-                            Debug.LogError($"Muilt type must be table enum! [{type}-{t}]");
-                            return null;
+                            enumNames.Add(Enum.GetNames(Type.GetType($"Table.{typeList[i]},Assembly-CSharp")));
+                            continue;
+                        }
+                        else
+                        {
+                            var t = Type.GetType($"{typeList[i]},Assembly-CSharp");
+                            if (t == null)
+                            {
+                                Debug.LogError($"Muilt type must be table enum! [{type}-{t}]");
+                                return null;
+                            }
+                            else
+                            {
+                                enumNames.Add(Enum.GetNames(t));
+                            }
+                        }
+                    }
+                    for (var i = 0; i < enumNames.Count - 1; i++)
+                    {
+                        for (int j = 0; j < enumNames[i].Length; j++)
+                        {
+                            var enumName = enumNames[i][j];
+                            if (string.Equals("None", enumName))
+                            {
+                                continue;
+                            }
+                            for (int k = i + 1; k < enumNames.Count; k++)
+                            {
+                                for (int l = 0; l < enumNames[k].Length; l++)
+                                {
+                                    if (string.Equals(enumName, enumNames[k][l]))
+                                    {
+                                        var warning = $"There are same enum name [{enumName}] in [{typeList[i]}] and [{typeList[k]}], please use [{typeList[i]}.{enumName}] or [{typeList[k]}.{enumName}].";
+                                        Debug.LogWarning(warning);
+                                        warningLogs.Add(warning);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -498,6 +538,7 @@ public class ExcelBuilder
         }
         builderData.Updata(folderNames);
         builderData.LoadTableData = true;
+        builderData.WarningLogs = new(warningLogs);
         EditorUtility.SetDirty(builderData);
         AssetDatabase.SaveAssets();
 
@@ -802,6 +843,11 @@ public class ExcelBuilder
         {
             return;
         }
+        foreach (var log in builderData.WarningLogs)
+        {
+            Debug.LogWarning(log);
+        }
+        builderData.WarningLogs.Clear();
         if (builderData.LoadMsgData)
         {
             builderData.LoadMsgData = false;
