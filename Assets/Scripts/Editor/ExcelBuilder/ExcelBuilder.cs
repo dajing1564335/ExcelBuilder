@@ -388,7 +388,7 @@ public class ExcelBuilder
             else
             {
                 var typeList = type.Split(";");
-                var isBaseType = TypeConvert.SupportType.ContainsKey(typeList[0]);
+                var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
                 if (typeList.Length == 1 || type[^1] == ';')
                 {
                     if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
@@ -447,9 +447,9 @@ public class ExcelBuilder
                     }
                 }
                 field = new Field(type, name, isBaseType);
+                field.ListItemLength = 1;
                 if (startIndex + 1 < table.Columns.Count && table.Rows[0][startIndex + 1].ToString() == "[")
                 {
-                    field.ListItemLength = isBaseType ? TypeConvert.SupportType[typeList[0]] : 1;
                     var count = GetEmptyCount(startIndex + 2, table, index);
                     if (count == -1)
                     {
@@ -462,10 +462,6 @@ public class ExcelBuilder
                     }
                     field.ListCount = (count + 2) / field.ListItemLength;
                     field.FieldLength = field.ListCount * field.ListItemLength + 1;
-                }
-                else
-                {
-                    field.FieldLength = isBaseType ? TypeConvert.SupportType[typeList[0]] : 1;
                 }
             }
             return field;
@@ -661,12 +657,7 @@ public class ExcelBuilder
                 StringBuilder code = new();
                 if (field.SubClass == null)
                 {
-                    code.Append($"TypeConvert.GetValue<{field.Type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}]");
-                    for (int i = 1; i < TypeConvert.SupportType[field.Type]; i++)
-                    {
-                        code.Append($", row[{(loop < 0 ? index + i : $"j{loop} + {i + j}")}]");
-                    }
-                    code.Append(")");
+                    code.Append($"TypeConvert.GetValue<{field.Type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}])");
                     return code.ToString();
                 }
                 code.AppendLine($"{GetSpace(5 + loop)}{field.Type} {field.Name} = new();");

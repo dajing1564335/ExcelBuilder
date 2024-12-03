@@ -5,18 +5,18 @@ using System;
 
 public static class TypeConvert
 {
-    public static readonly Dictionary<string, int> SupportType = new()
+    public static readonly List<string> SupportType = new()
     {
-        ["int"] = 1,
-        ["float"] = 1,
-        ["bool"] = 1,
-        ["string"] = 1,
-        ["char"] = 1,
-        ["MsgLabel"] = 1,
-        ["Vector3"] = 3,
-        ["Vector3Int"] = 3,
-        ["Vector2"] = 2,
-        ["Vector2Int"] = 2,
+        "int",
+        "float",
+        "bool",
+        "string",
+        "char",
+        "MsgLabel",
+        "Vector3",
+        "Vector3Int",
+        "Vector2",
+        "Vector2Int"
     };
 
     public static T GetValue<T>(object valueObj)
@@ -75,6 +75,56 @@ public static class TypeConvert
             }
             Debug.LogError($"{value} is not a char.");
         }
+        
+        if (typeof(T) == typeof(Vector3))
+        {
+            var values = value.Split(',');
+            if (values.Length == 3
+                && float.TryParse(values[0], out var x)
+                && float.TryParse(values[1], out var y)
+                && float.TryParse(values[2], out var z))
+            {
+                return (T)(object)new Vector3(x, y, z);
+            }
+            Debug.LogError($"{value} is not a Vector3.");
+        }
+        
+        if (typeof(T) == typeof(Vector3Int))
+        {
+            var values = value.Split(',');
+            if (values.Length == 3
+                && int.TryParse(values[0], out var x)
+                && int.TryParse(values[1], out var y)
+                && int.TryParse(values[2], out var z))
+            {
+                return (T)(object)new Vector3Int(x, y, z);
+            }
+            Debug.LogError($"{value} is not a Vector3Int.");
+        }
+        
+        if (typeof(T) == typeof(Vector2))
+        {
+            var values = value.Split(',');
+            if (values.Length == 2
+                && float.TryParse(values[0], out var x)
+                && float.TryParse(values[1], out var y))
+            {
+                return (T)(object)new Vector2(x, y);
+            }
+            Debug.LogError($"{value} is not a Vector2.");
+        }
+        
+        if (typeof(T) == typeof(Vector2Int))
+        {
+            var values = value.Split(',');
+            if (values.Length == 2
+                && int.TryParse(values[0], out var x)
+                && int.TryParse(values[1], out var y))
+            {
+                return (T)(object)new Vector2Int(x, y);
+            }
+            Debug.LogError($"{value} is not a Vector2Int.");
+        }
 
         if (typeof(T).IsEnum)
         {
@@ -87,37 +137,7 @@ public static class TypeConvert
 
         return default;
     }
-
-    public static T GetValue<T>(object value1, object value2)
-    {
-        if (typeof(T) == typeof(Vector2))
-        {
-            return (T)(object)new Vector2(GetValue<float>(value1), GetValue<float>(value2));
-        }
-
-        if (typeof(T) == typeof(Vector2Int))
-        {
-            return (T)(object)new Vector2Int(GetValue<int>(value1), GetValue<int>(value2));
-        }
-
-        return default;
-    }
-
-    public static T GetValue<T>(object value1, object value2, object value3)
-    {
-        if (typeof(T) == typeof(Vector3))
-        {
-            return (T)(object)new Vector3(GetValue<float>(value1), GetValue<float>(value2), GetValue<float>(value3));
-        }
-
-        if (typeof(T) == typeof(Vector3Int))
-        {
-            return (T)(object)new Vector3Int(GetValue<int>(value1), GetValue<int>(value2), GetValue<int>(value3));
-        }
-
-        return default;
-    }
-
+    
     public static int GetValue(object valueObj, string types)
     {
         if (valueObj is DBNull)
