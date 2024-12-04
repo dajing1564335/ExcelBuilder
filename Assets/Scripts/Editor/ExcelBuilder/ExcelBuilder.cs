@@ -405,8 +405,11 @@ public class ExcelBuilder
                     {
                         if (folderNames.Contains(typeList[i]))
                         {
-                            enumNames.Add(Enum.GetNames(Type.GetType($"Table.{typeList[i]},Assembly-CSharp")));
-                            continue;
+                            var t = Type.GetType($"Table.{typeList[i]},Assembly-CSharp");
+                            if (t != null)
+                            {
+                                enumNames.Add(Enum.GetNames(t));
+                            }
                         }
                         else
                         {
