@@ -253,5 +253,24 @@ public static class TypeConvert
 
         return default;
     }
+
+    public static List<int> GetListValue(object valueObj, string types)
+    {
+        if (valueObj is DBNull)
+        {
+            return default;
+        }
+        var value = valueObj.ToString();
+        if (value == string.Empty)
+        {
+            return default;
+        }
+        var retValue = new List<int>();
+        foreach (var v in value.Split(','))
+        {
+            retValue.Add(GetValue(v, types));
+        }
+        return retValue;
+    }
 }
 #endif

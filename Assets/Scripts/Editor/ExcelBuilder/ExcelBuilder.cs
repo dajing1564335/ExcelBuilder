@@ -226,6 +226,7 @@ public class ExcelBuilder
             steam.Close();
             msgData.AddData(tables);
         }
+        msgData.ReplaceMessage();
         EditorUtility.SetDirty(msgData);
         AssetDatabase.SaveAssets();
 
@@ -687,7 +688,7 @@ public class ExcelBuilder
             }
             if (field.Type.Contains(';'))
             {
-                return $"TypeConvert.GetValue(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}], \"{field.Type}\")";
+                return $"TypeConvert.Get{(field.IsList ? "List" : string.Empty)}Value(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}], \"{field.Type}\")";
             }
             return $"TypeConvert.GetValue<{field.Type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}])";
         }
