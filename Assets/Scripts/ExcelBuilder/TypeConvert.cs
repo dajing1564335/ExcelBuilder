@@ -18,6 +18,16 @@ public static class TypeConvert
         "Vector2",
         "Vector2Int"
     };
+    //Support type[]
+    public static readonly List<string> SupportListType = new()
+    {
+        "int",
+        "float",
+        "bool",
+        "string",
+        "char",
+        "MsgLabel",
+    };
 
     public static T GetValue<T>(object valueObj)
     {
@@ -31,7 +41,8 @@ public static class TypeConvert
             return default;
         }
 
-        if (typeof(T) == typeof(int))
+        var type = typeof(T);
+        if (type == typeof(int))
         {
             if (int.TryParse(value, out int retValue))
             {
@@ -40,7 +51,7 @@ public static class TypeConvert
             Debug.LogError($"{value} is not a int.");
         }
 
-        if (typeof(T) == typeof(float))
+        if (type == typeof(float))
         {
             if (float.TryParse(value, out float retValue))
             {
@@ -49,7 +60,7 @@ public static class TypeConvert
             Debug.LogError($"{value} is not a float.");
         }
 
-        if (typeof(T) == typeof(bool))
+        if (type == typeof(bool))
         {
             if (value == "1" || value == "true")
             {
@@ -62,12 +73,12 @@ public static class TypeConvert
             Debug.LogError($"{value} is not a bool.");
         }
 
-        if (typeof(T) == typeof(string))
+        if (type == typeof(string))
         {
             return (T)(object)value;
         }
 
-        if (typeof(T) == typeof(char))
+        if (type == typeof(char))
         {
             if (value.Length == 1)
             {
@@ -76,7 +87,7 @@ public static class TypeConvert
             Debug.LogError($"{value} is not a char.");
         }
         
-        if (typeof(T) == typeof(Vector3))
+        if (type == typeof(Vector3))
         {
             var values = value.Split(',');
             if (values.Length == 3
@@ -89,7 +100,7 @@ public static class TypeConvert
             Debug.LogError($"{value} is not a Vector3.");
         }
         
-        if (typeof(T) == typeof(Vector3Int))
+        if (type == typeof(Vector3Int))
         {
             var values = value.Split(',');
             if (values.Length == 3
@@ -102,7 +113,7 @@ public static class TypeConvert
             Debug.LogError($"{value} is not a Vector3Int.");
         }
         
-        if (typeof(T) == typeof(Vector2))
+        if (type == typeof(Vector2))
         {
             var values = value.Split(',');
             if (values.Length == 2
@@ -114,7 +125,7 @@ public static class TypeConvert
             Debug.LogError($"{value} is not a Vector2.");
         }
         
-        if (typeof(T) == typeof(Vector2Int))
+        if (type == typeof(Vector2Int))
         {
             var values = value.Split(',');
             if (values.Length == 2
@@ -126,13 +137,63 @@ public static class TypeConvert
             Debug.LogError($"{value} is not a Vector2Int.");
         }
 
-        if (typeof(T).IsEnum)
+        if (type.IsEnum)
         {
-            if (Enum.TryParse(typeof(T), value, out object retValue))
+            if (Enum.TryParse(type, value, out object retValue))
             {
                 return (T)retValue;
             }
-            Debug.LogError($"{value} is not a [{typeof(T).Name}].");
+            Debug.LogError($"{value} is not a [{type.Name}].");
+        }
+
+        if (type == typeof(List<int>))
+        {
+            var retValue = new List<int>();
+            foreach (var v in value.Split(','))
+            {
+                retValue.Add(GetValue<int>(v));
+            }
+            return (T)(object)retValue;
+        }
+
+        if (type == typeof(List<float>))
+        {
+            var retValue = new List<float>();
+            foreach (var v in value.Split(','))
+            {
+                retValue.Add(GetValue<float>(v));
+            }
+            return (T)(object)retValue;
+        }
+
+        if (type == typeof(List<bool>))
+        {
+            var retValue = new List<bool>();
+            foreach (var v in value.Split(','))
+            {
+                retValue.Add(GetValue<bool>(v));
+            }
+            return (T)(object)retValue;
+        }
+
+        if (type == typeof(List<string>))
+        {
+            var retValue = new List<string>();
+            foreach (var v in value.Split(','))
+            {
+                retValue.Add(GetValue<string>(v));
+            }
+            return (T)(object)retValue;
+        }
+
+        if (type == typeof(List<char>))
+        {
+            var retValue = new List<char>();
+            foreach (var v in value.Split(','))
+            {
+                retValue.Add(GetValue<char>(v));
+            }
+            return (T)(object)retValue;
         }
 
         return default;

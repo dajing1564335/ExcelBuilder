@@ -239,17 +239,19 @@ public class ExcelBuilder
     {
         public string Type;
         public string Name;
+        public bool IsList;
         public int FieldLength = 1;
         public int ListCount = 1;
         public int ListItemLength;
         public bool IsBaseType;
         public List<Field> SubClass;
 
-        public Field(string types, string name, bool isBaseType)
+        public Field(string types, string name, bool isBaseType, bool isList)
         {
             Type = types;
             Name = name;
             IsBaseType = isBaseType;
+            IsList = isList;
         }
     }
 
@@ -361,7 +363,7 @@ public class ExcelBuilder
             }
             if (type == "class[")
             {
-                field = new Field($"{GetTableName(table.TableName, fileInfos[index].Name)}{table.Rows[1][startIndex]}", table.Rows[1][startIndex].ToString(), true);
+                field = new Field($"{GetTableName(table.TableName, fileInfos[index].Name)}{table.Rows[1][startIndex]}", table.Rows[1][startIndex].ToString(), true, false);
                 var fields = GetFields(startIndex + 1, table, index, true);
                 if (fields == null)
                 {
@@ -387,6 +389,12 @@ public class ExcelBuilder
             }
             else
             {
+                var isList = false;
+                if (type.Length > 2 && type[(type.Length - 2)..] == "[]")
+                {
+                    isList = true;
+                    type = type[..(type.Length - 2)];
+                }
                 var typeList = type.Split(";");
                 var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
                 if (typeList.Length == 1 || type[^1] == ';')
@@ -394,6 +402,11 @@ public class ExcelBuilder
                     if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
                     {
                         Debug.LogError($"There are not support type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex}) - {typeList[0]}]");
+                        return null;
+                    }
+                    if (isList && isBaseType && !TypeConvert.SupportListType.Contains(typeList[0]))
+                    {
+                        Debug.LogError($"There are not support list type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex}) - {typeList[0]}[] ]");
                         return null;
                     }
                 }
@@ -416,7 +429,7 @@ public class ExcelBuilder
                             var t = Type.GetType($"{typeList[i]},Assembly-CSharp");
                             if (t == null)
                             {
-                                Debug.LogError($"Muilt type must be table enum! [{type}-{t}]");
+                                Debug.LogError($"Muilt type must be enum! [{type}-{t}]");
                                 return null;
                             }
                             else
@@ -449,7 +462,7 @@ public class ExcelBuilder
                         }
                     }
                 }
-                field = new Field(type, name, isBaseType);
+                field = new Field(type, name, isBaseType, isList);
                 field.ListItemLength = 1;
                 if (startIndex + 1 < table.Columns.Count && table.Rows[0][startIndex + 1].ToString() == "[")
                 {
@@ -594,7 +607,7 @@ public class ExcelBuilder
         string GetType(Field field)
         {
             var type = field.Type.Contains(';') ? "int" : field.Type;
-            return field.ListCount < 2 ? type : $"List<{type}>";
+            return field.ListCount < 2 && !field.IsList ? type : $"List<{type}>";
         }
 
         var code = new StringBuilder();
@@ -605,7 +618,7 @@ public class ExcelBuilder
             code.AppendLine("\t{");
             foreach (var field in fields)
             {
-                code.AppendLine($"\t\tpublic {GetType(field)} {field.Name}{(field.ListCount < 2 ? ";" : " = new();")}");
+                code.AppendLine($"\t\tpublic {GetType(field)} {field.Name}{(field.ListCount < 2 && !field.IsList? ";" : " = new();")}");
             }
             code.AppendLine("\t}");
         }
@@ -660,7 +673,8 @@ public class ExcelBuilder
                 StringBuilder code = new();
                 if (field.SubClass == null)
                 {
-                    code.Append($"TypeConvert.GetValue<{field.Type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}])");
+                    var type = field.IsList ? $"List<{field.Type}>" : field.Type;
+                    code.Append($"TypeConvert.GetValue<{type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}])");
                     return code.ToString();
                 }
                 code.AppendLine($"{GetSpace(5 + loop)}{field.Type} {field.Name} = new();");
