@@ -1,0 +1,14 @@
+{
+  "name": "com.lzt.exceldb",
+  "version": "1.0.0",
+  "displayName": "ExcelDB",
+  "description": "ExcelDB",
+  "unity": "2022.3",
+  "dependencies": {},
+  "author": {
+    "name": "lzt",
+    "email": "dajing1564335@gmail.com"
+  },
+  "keywords": ["unity", "tools", "package"],
+  "license": "MIT"
+}
