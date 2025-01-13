@@ -258,7 +258,7 @@ public class ExcelBuilder
 
     static string GetTableName(string name, string fileName)
     {
-        return name == "Sheet1" ? fileName.Replace(".xlsx", string.Empty) : name;
+        return name == "Sheet1" ? Path.GetFileNameWithoutExtension(fileName) : name;
     }
 
     struct ClassInfo
@@ -430,7 +430,7 @@ public class ExcelBuilder
                             var t = Type.GetType($"{typeList[i]},Assembly-CSharp");
                             if (t == null)
                             {
-                                Debug.LogError($"Muilt type must be enum! [{type}-{t}]");
+                                Debug.LogError($"Muilt type must be enum! [{fileInfos[index].Name} - {table.TableName} - {type} - {typeList[i]}]");
                                 return null;
                             }
                             else
@@ -690,7 +690,8 @@ public class ExcelBuilder
             {
                 return $"TypeConvert.Get{(field.IsList ? "List" : string.Empty)}Value(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}], \"{field.Type}\")";
             }
-            return $"TypeConvert.GetValue<{field.Type}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}])";
+            var type2 = field.IsList ? $"List<{field.Type}>" : field.Type;
+            return $"TypeConvert.GetValue<{type2}>(row[{(loop < 0 ? index : j == 0 ? $"j{loop}" : $"j{loop} + {j}")}])";
         }
 
         string GetFieldCode(int index, Field field, string dataName, int j, int loop)
