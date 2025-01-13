@@ -10,20 +10,17 @@ using System.Linq;
 
 public class ExcelBuilder
 {
-    static readonly string MessageFolder = Application.dataPath + "/ExcelDB/Scripts/Message/";
-    public static string TableFolder = Application.dataPath + "/ExcelDB/Scripts/Table/";
-    public static string RefFolder = Application.dataPath + "/ExcelDB/ExcelData/Ref/";
-    public static string DataFolder = Application.dataPath + "/Resources/ExcelData/";
+    static readonly string MessageFolder = Application.dataPath + "/Scripts/Message/";
+    public static string TableFolder = Application.dataPath + "/Scripts/Table/";
+    public static string RefFolder = Application.dataPath + "/Resources/ExcelData/Ref/";
+    public static string DataFolder = Application.dataPath + "/Resources/ExcelData/Data/";
 
-    static readonly string MsgExcelFolder = Application.dataPath + "/ExcelDB/ExcelFile/Message/";
-    static readonly string TableExcelFolder = Application.dataPath + "/ExcelDB/ExcelFile/Table/";
+    static readonly string MsgExcelFolder = Application.dataPath.Replace("Assets", "Data/Message/");
+    static readonly string TableExcelFolder = Application.dataPath.Replace("Assets", "Data/Table/");
 
-    const string AssetRefFolder = "Assets/ExcelDB/ExcelData/Ref/";
-    const string AssetDataFolder = "Assets/Resources/ExcelData/";
-    
-    const string ExcelBuilderDataRefPath = "Assets/ExcelDB/ExcelData/ExcelBuilderData.asset";
-    static readonly string LanguagePath = Application.dataPath + AssetDatabase.GUIDToAssetPath("9a796b537d6718f49a28b3aa8df0b464")[6..];
-    static readonly string MsgLabelPath = Application.dataPath + AssetDatabase.GUIDToAssetPath("eed6da266c2122f4781c6779f78f3911")[6..];
+    const string AssetRefFolder = "Assets/Resources/ExcelData/Ref/";
+    const string AssetDataFolder = "Assets/Resources/ExcelData/Data/";
+    const string ExcelBuilderDataRefPath = AssetRefFolder + "ExcelBuilderData.asset";
 
     #region RemoveComment
     private static void RemoveComment(DataTable table)
@@ -60,10 +57,18 @@ public class ExcelBuilder
     }
     #endregion
 
+    private static void CreateFolder()
+    {
+        Directory.CreateDirectory(TableFolder);
+        Directory.CreateDirectory(RefFolder);
+        Directory.CreateDirectory(DataFolder);
+    }
+
     #region BuildMsg
     [MenuItem("ExcelBuilder/BuildMsgAndLoad")]
     static void BuildMsg()
     {
+        CreateFolder();
         string[] languages = default;
         List<string> msgLabels = new();
         var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden));
@@ -160,7 +165,7 @@ public class ExcelBuilder
         }
         code.AppendLine("}");
 
-        File.WriteAllText(LanguagePath, code.ToString());
+        File.WriteAllText(MessageFolder + "Language.cs", code.ToString());
     }
 
     private static void CreateMsgLabel(List<string> msgLabels)
@@ -185,7 +190,7 @@ public class ExcelBuilder
         EditorUtility.SetDirty(msgRef);
         AssetDatabase.SaveAssets();
 
-        File.WriteAllText(MsgLabelPath, code.ToString());
+        File.WriteAllText(MessageFolder + "MsgLabel.cs", code.ToString());
     }
 
     [MenuItem("ExcelBuilder/LoadMsgData")]
@@ -272,6 +277,8 @@ public class ExcelBuilder
     private static void BuildTables()
     {
         List<string> warningLogs = new();
+
+        CreateFolder();
 
         List<string> folderNames = new();
         List<DataTableCollection> excelData = new();
@@ -842,24 +849,7 @@ public class ExcelBuilder
     public static void OnLoadMethod()
     {
         var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelBuilderDataRefPath);
-        if (!builderData)
-        {
-            Directory.CreateDirectory(TableFolder);
-            Directory.CreateDirectory(RefFolder);
-            Directory.CreateDirectory(DataFolder);
-            Directory.CreateDirectory(MsgExcelFolder);
-            Directory.CreateDirectory(TableExcelFolder);
-
-            if (!File.Exists(MsgLabelPath))
-            {
-                CreateMsgLabel(new());
-            }
-            
-            builderData = ScriptableObject.CreateInstance<ExcelBuilderSO>();
-            AssetDatabase.CreateAsset(builderData, ExcelBuilderDataRefPath);
-            return;
-        }
-        if (!(builderData.LoadMsgData || builderData.LoadTableData))
+        if (!builderData || !(builderData.LoadMsgData || builderData.LoadTableData))
         {
             return;
         }

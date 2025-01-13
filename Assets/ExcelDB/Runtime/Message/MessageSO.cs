@@ -2,7 +2,6 @@ using UnityEngine;
 using System;
 using System.Data;
 using System.Text.RegularExpressions;
-using System.Linq;
 
 public class MessageSO : ScriptableObject
 {
@@ -51,20 +50,18 @@ public class MessageSO : ScriptableObject
         }
     }
 
-    private string ReplaceMessage(SerializableDictionary<MsgLabel, string> data, MsgLabel key) 
-        => Regex.Replace(data[key], PATTERN, match =>
+    private string ReplaceMessage(SerializableDictionary<MsgLabel, string> data, MsgLabel key)
+    {
+        return Regex.Replace(data[key], PATTERN, match =>
         {
-            var values = match.Groups[1].Value.Split(',');
-            if (Enum.TryParse<MsgLabel>(values[0], out var label))
+            string value = match.Groups[1].Value;
+            if (Enum.TryParse<MsgLabel>(value, out var label))
             {
-                if (values.Length > 1)
-                {
-                    return string.Format(ReplaceMessage(data, label), values.Skip(1).Cast<object>().ToArray());
-                }
                 return ReplaceMessage(data, label);
             }
-            Debug.LogWarning($"{values[0]} is not a MsgLabel in MsgLabel.{key} - {data[key]}");
+            Debug.LogWarning($"{value} is not a MsgLabel in MsgLabel.{key} - {data[key]}");
             return data[key];
         });
+    }
 #endif
 }

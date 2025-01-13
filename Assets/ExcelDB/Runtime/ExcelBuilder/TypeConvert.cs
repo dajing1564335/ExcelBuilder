@@ -221,7 +221,7 @@ public static class TypeConvert
         {
             foreach (var type in types.Split(";"))
             {
-                var t = Type.GetType($"Table.{type},Assembly-CSharp");
+                var t = Type.GetType($"Table.{type}");
                 if (t != null && Enum.TryParse(t, value, out object retValue))
                 {
                     return (int)retValue;
@@ -238,7 +238,7 @@ public static class TypeConvert
         {
             var type = value[..index];
             var newValue = value[(index + 1)..];
-            var t = Type.GetType($"Table.{type},Assembly-CSharp");
+            var t = Type.GetType($"Table.{type}");
             if (t != null && Enum.TryParse(t, newValue, out object retValue))
             {
                 return (int)retValue;

@@ -5,6 +5,17 @@ using System.Linq;
 
 public class ExcelBuilderSO : ScriptableObject
 {
+    public string MessageFolder = "/ExcelDB/Scripts/Message/";
+    public string TableFolder = "/ExcelDB/Scripts/Table/";
+    public string RefFolder = "/Resources/ExcelData/Ref/";
+    public string DataFolder = "/Resources/ExcelData/Data/";
+    
+    public string MsgExcelFolder = "/ExcelDB/Excel/Message/";
+    public string TableExcelFolder = "/ExcelDB/Excel/Table/";
+    
+    public string AssetRefFolder = "Assets/ExcelDB/Ref/";
+    public string AssetDataFolder = "Assets/Resources/ExcelData/Data/";
+    
     public bool LoadMsgData;
     public bool LoadTableData;
     public List<string> EnumNames = new();
