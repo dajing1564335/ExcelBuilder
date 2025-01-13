@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class MsgAccessor
 {
-    private const string MsgDataPath = "ExcelData/Data/MsgData";
+    private const string MsgDataPath = "ExcelData/MsgData";
 
     private static Dictionary<MsgLabel, string> _data;
         

@@ -9,7 +9,7 @@ namespace Table
 
         public TableAccessorDictionary()
         {
-            var data = Resources.Load<ScriptableObjectBase>($"ExcelData/Data/{typeof(V).Name}");
+            var data = Resources.Load<ScriptableObjectBase>($"ExcelData/{typeof(V).Name}");
             if (!data)
             {
                 Debug.LogError("No data! Please build data first.");
