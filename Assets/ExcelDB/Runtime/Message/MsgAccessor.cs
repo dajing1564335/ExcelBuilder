@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public static class MsgAccessor
@@ -19,16 +20,17 @@ public static class MsgAccessor
         Resources.UnloadAsset(data);
     }
 
-    public static string GetMessage(MsgLabel msgId)
+    public static string GetMessage(MsgLabel msgId, List<int> param)
+        => param == null ? GetMessage(msgId) : GetMessage(msgId, param.Cast<object>().ToArray());
+
+    public static string GetMessage(MsgLabel msgId, params object[] param)
     {
 #if UNITY_EDITOR
         if (_data == null)
         {
-            var data = Resources.Load<MessageSO>(MsgDataPath);
-            _data = new Dictionary<MsgLabel, string>(data.MsgDatas[0]);
-            Resources.UnloadAsset(data);
+            LoadMsg(0);
         }
 #endif
-        return _data[msgId];
+        return param.Length == 0 ? _data[msgId] : string.Format(_data[msgId], param);
     }
 }
