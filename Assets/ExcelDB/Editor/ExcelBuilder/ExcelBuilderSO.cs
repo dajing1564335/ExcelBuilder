@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System.Linq;
 
 public class ExcelBuilderSO : ScriptableObject
 {
@@ -11,21 +12,19 @@ public class ExcelBuilderSO : ScriptableObject
 
     public void Updata(List<string> names)
     {
-        foreach (var name in EnumNames)
+        foreach (var name in EnumNames.Where(name => !names.Contains(name)))
         {
-            if (!names.Contains(name))
+            if (Directory.Exists(ExcelBuilder.TableFolder + name))
             {
-                if (Directory.Exists(ExcelBuilder.TableFolder + name))
-                {
-                    Directory.Delete(ExcelBuilder.TableFolder + name, true);
-                }
-                File.Delete(ExcelBuilder.TableFolder + name + ".meta");
-                File.Delete(ExcelBuilder.DataFolder + name + "Data.asset");
-                File.Delete(ExcelBuilder.DataFolder + name + "Data.asset.meta");
-                File.Delete(ExcelBuilder.RefFolder + name + "Ref.asset");
-                File.Delete(ExcelBuilder.RefFolder + name + "Ref.asset.meta");
+                Directory.Delete(ExcelBuilder.TableFolder + name, true);
             }
+            File.Delete(ExcelBuilder.TableFolder + name + ".meta");
+            File.Delete(ExcelBuilder.DataFolder + name + "Data.asset");
+            File.Delete(ExcelBuilder.DataFolder + name + "Data.asset.meta");
+            File.Delete(ExcelBuilder.RefFolder + name + "Ref.asset");
+            File.Delete(ExcelBuilder.RefFolder + name + "Ref.asset.meta");
         }
+
         EnumNames = names;
     }
 }

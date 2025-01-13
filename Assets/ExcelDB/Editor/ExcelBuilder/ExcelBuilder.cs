@@ -16,7 +16,7 @@ public class ExcelBuilder
     public static string DataFolder = Application.dataPath + "/Resources/ExcelData/";
 
     private static readonly string MsgExcelFolder = Application.dataPath + "/ExcelDB/ExcelFile/Message/";
-    private static readonly string TableExcelFolder = Application.dataPath + "/ExcelDB/ExcelFile/Table/";
+    public static readonly string TableExcelFolder = Application.dataPath + "/ExcelDB/ExcelFile/Table/";
 
     private const string AssetRefFolder = "Assets/ExcelDB/Generate/Ref/";
     private const string AssetDataFolder = "Assets/Resources/ExcelData/";
@@ -47,7 +47,7 @@ public class ExcelBuilder
         }
     }
 
-    private static DataTableCollection RemoveComment(DataTableCollection tables)
+    public static DataTableCollection RemoveComment(DataTableCollection tables)
     {
         foreach (DataTable table in tables)
         {
