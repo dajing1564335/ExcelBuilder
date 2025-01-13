@@ -60,3 +60,11 @@ crashlytics-build.properties
 
 UserSettings/Layouts/default-2021.dwlt
 .idea/
+Assets/Resources/
+Assets/ExcelDB/Scripts/
+Assets/ExcelDB/ExcelFile/
+Assets/Resources.meta
+Assets/ExcelDB/ExcelData.meta
+Assets/ExcelDB/ExcelFile.meta
+Assets/ExcelDB/Scripts.meta
+Assets/ExcelDB/ExcelData/
