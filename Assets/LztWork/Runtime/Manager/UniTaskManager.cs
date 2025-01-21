@@ -11,7 +11,11 @@ public class UniTaskManager : SingletonMonoBehaviour<UniTaskManager>
     {
         DontDestroyOnLoad(gameObject);
     }
-
+    public UniTask Delay(float secondsDelay)
+    {
+        return UniTask.Delay((int)(secondsDelay * 1000), cancellationToken: _cancellationTokenSource.Token);
+    }
+    
     public UniTask Delay(int millisecondsDelay)
     {
         return UniTask.Delay(millisecondsDelay, cancellationToken: _cancellationTokenSource.Token);
