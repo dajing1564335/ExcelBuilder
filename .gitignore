@@ -58,10 +58,11 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
-UserSettings/Layouts/default-2021.dwlt
 Assets/Resources/
 Assets/ExcelDB/Generate/
 Assets/ExcelDB/ExcelFile/
 Assets/Resources.meta
 Assets/ExcelDB/Generate.meta
 Assets/ExcelDB/ExcelFile.meta
+Assets/LztWork/Editor/BookmarkWindow/BookmarkData.asset
+Assets/LztWork/Editor/BookmarkWindow/BookmarkData.asset.meta
