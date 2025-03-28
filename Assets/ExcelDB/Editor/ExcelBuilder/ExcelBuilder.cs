@@ -794,7 +794,7 @@ namespace ExcelDB
                 using var stream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
 
-                foreach (DataTable table in RemoveComment(reader.AsDataSet().Tables)
+                foreach (DataTable table in RemoveComment(reader.AsDataSet().Tables))
                 {
                     if (table.Columns.Count < 2 || table.Rows.Count < 3)
                     {
