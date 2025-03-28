@@ -7,88 +7,88 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-public class ExcelSearchWindow : EditorWindow
+namespace ExcelDB
 {
-    public string SearchPattern;
-
-    private Vector2 scrollPos;
-    private List<DataTableCollection> _data = new();
-    private List<string> _result = new();
-
-    [MenuItem("ExcelBuilder/SearchWindow")]
-    public static void ShowWindow()
+    public class ExcelSearchWindow : EditorWindow
     {
-        GetWindow(typeof(ExcelSearchWindow)).Show();
-    }
+        public string SearchPattern;
 
-    private void OnEnable()
-    {
-        LoadData();
-    }
+        private Vector2 scrollPos;
+        private readonly List<DataTableCollection> _data = new();
+        private readonly List<string> _result = new();
 
-    private void OnGUI()
-    {
-        SearchPattern = EditorGUILayout.TextField("SearchPattern", SearchPattern);
-
-        if (GUILayout.Button("Search"))
+        [MenuItem("ExcelBuilder/SearchWindow")]
+        public static void ShowWindow()
         {
-            Search();
+            GetWindow(typeof(ExcelSearchWindow)).Show();
         }
-        if (GUILayout.Button("Reload"))
+
+        private void OnEnable()
         {
             LoadData();
         }
-        scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
-        foreach (var line in _result)
-        {
-            EditorGUILayout.LabelField(line);
-        }
-        EditorGUILayout.EndScrollView();
-    }
 
-    private void LoadData()
-    {
-        _data.Clear();
-        foreach (var file in Directory.CreateDirectory(ExcelBuilder.TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)))
+        private void OnGUI()
         {
-            var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
-            var tables = ExcelBuilder.RemoveComment(reader.AsDataSet().Tables);
-            _data.Add(tables);
-            foreach (DataTable table in tables)
+            SearchPattern = EditorGUILayout.TextField("SearchPattern", SearchPattern);
+
+            if (GUILayout.Button("Search"))
             {
-                if (table.TableName == "Sheet1")
-                {
-                    table.TableName = Path.GetFileNameWithoutExtension(file.Name);
-                }
+                Search();
             }
-            reader.Close();
-            steam.Close();
-        }
-    }
-
-    private void Search()
-    {
-        _result.Clear();
-        foreach (var tables in _data)
-        {
-            foreach (DataTable table in tables)
+            if (GUILayout.Button("Reload"))
             {
-                if (table.Columns.Count == 0 || table.Rows.Count < 2)
+                LoadData();
+            }
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+            foreach (var line in _result)
+            {
+                EditorGUILayout.LabelField(line);
+            }
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void LoadData()
+        {
+            _data.Clear();
+            foreach (var file in Directory.CreateDirectory(ExcelBuilder.TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)))
+            {
+                var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
+                var tables = ExcelBuilder.RemoveComment(reader.AsDataSet().Tables);
+                _data.Add(tables);
+                foreach (DataTable table in tables)
                 {
-                    continue;
+                    table.TableName = ExcelBuilder.GetTableName(table.TableName, file.Name);
                 }
-                for (int i = 2; i < table.Rows.Count; i++)
+                reader.Close();
+                steam.Close();
+            }
+        }
+
+        private void Search()
+        {
+            _result.Clear();
+            foreach (var tables in _data)
+            {
+                foreach (DataTable table in tables)
                 {
-                    if (table.Rows[i][0] is DBNull)
+                    if (table.Columns.Count == 0 || table.Rows.Count < 2)
                     {
                         continue;
                     }
-                    for (int j = 1; j < table.Columns.Count; j++)
+                    for (int i = 2; i < table.Rows.Count; i++)
                     {
-                        if (table.Rows[i][j].ToString().Contains(SearchPattern))
+                        if (table.Rows[i][0] is DBNull)
                         {
-                            _result.Add(table.TableName.PadRight(20) + table.Rows[i][0].ToString());
+                            continue;
+                        }
+                        for (int j = 1; j < table.Columns.Count; j++)
+                        {
+                            if (table.Rows[i][j].ToString().Contains(SearchPattern))
+                            {
+                                _result.Add(table.TableName.PadRight(20) + table.Rows[i][0].ToString());
+                            }
                         }
                     }
                 }

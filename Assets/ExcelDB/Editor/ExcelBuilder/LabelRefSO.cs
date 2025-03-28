@@ -1,17 +1,20 @@
 using UnityEngine;
 
-public class LabelRefSO : ScriptableObject
+namespace ExcelDB
 {
-    public SerializableDictionary<string, int> LabelRef = new();
-    public int MaxId = 0;
-
-    public int GetId(string label)
+    public class LabelRefSO : ScriptableObject
     {
-        if (LabelRef.TryGetValue(label, out var id))
+        public SerializableDictionary<string, int> LabelRef = new();
+        public int MaxId = 0;
+
+        public int GetId(string label)
         {
-            return id;
+            if (LabelRef.TryGetValue(label, out var id))
+            {
+                return id;
+            }
+            LabelRef.Add(label, MaxId);
+            return MaxId++;
         }
-        LabelRef.Add(label, MaxId);
-        return MaxId++;
     }
 }
