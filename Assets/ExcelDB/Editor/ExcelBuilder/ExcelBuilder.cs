@@ -8,7 +8,7 @@ using System;
 using System.Text;
 using System.Linq;
 
-namespace ExcelDB
+namespace Table
 {
     public class ExcelBuilder
     {
@@ -26,6 +26,7 @@ namespace ExcelDB
 
         private const string DefaultSheetName = "Sheet1";
         private const string Comment = "comment";
+        private const string Ref = "ref";
 
         #region RemoveComment
         private static void RemoveComment(DataTable table)
@@ -57,14 +58,25 @@ namespace ExcelDB
         }
         #endregion
 
+        private static T LoadOrCreateAsset<T>(string path) where T : ScriptableObject
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (!asset)
+            {
+                asset = ScriptableObject.CreateInstance<T>();
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            return asset;
+        }
+
         #region BuildMsg
         [MenuItem("ExcelBuilder/BuildMsgAndLoad")]
         private static void BuildMsg()
         {
             string[] languages = default;
             List<string> msgLabels = new();
-            var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden));
-            foreach (var file in fileInfos)
+
+            foreach (var file in Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)))
             {
                 //LoadData
                 using var stream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -78,6 +90,8 @@ namespace ExcelDB
                         Debug.LogWarning($"Tabel [{table.TableName}] is skipped.");
                         continue;
                     }
+
+                    #region Create Language Data
                     if (languages == default)
                     {
                         languages = new string[table.Columns.Count - 1];
@@ -111,6 +125,9 @@ namespace ExcelDB
                             }
                         }
                     }
+                    #endregion
+
+                    #region Create MsgLabel Data
                     for (int i = 1; i < table.Rows.Count; i++)
                     {
                         if (table.Rows[i][0] is DBNull)
@@ -125,10 +142,13 @@ namespace ExcelDB
                         }
                         msgLabels.Add(msgLabel);
                     }
+                    #endregion
                 }
-                CreateLanguage(languages);
-                CreateMsgLabel(msgLabels);
             }
+
+            CreateLanguage(languages);
+            CreateMsgLabel(msgLabels);
+
             var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelDBAsset);
             builderData.LoadMsgData = true;
             EditorUtility.SetDirty(builderData);
@@ -154,13 +174,7 @@ namespace ExcelDB
 
         private static void CreateMsgLabel(List<string> msgLabels)
         {
-            var path = AssetRefFolder + "MsgRef.asset";
-            var msgRef = AssetDatabase.LoadAssetAtPath<LabelRefSO>(path);
-            if (!msgRef)
-            {
-                msgRef = ScriptableObject.CreateInstance<LabelRefSO>();
-                AssetDatabase.CreateAsset(msgRef, path);
-            }
+            var msgRef = LoadOrCreateAsset<LabelRefSO>(AssetRefFolder + "MsgRef.asset");
 
             var code = new StringBuilder();
             code.AppendLine("public enum MsgLabel");
@@ -187,16 +201,9 @@ namespace ExcelDB
                 EditorUtility.SetDirty(builderData);
                 AssetDatabase.SaveAssets();
             }
-            var path = AssetDataFolder + "MsgData.asset";
-            var msgData = AssetDatabase.LoadAssetAtPath<MessageSO>(path);
-            if (!msgData)
-            {
-                msgData = ScriptableObject.CreateInstance<MessageSO>();
-                AssetDatabase.CreateAsset(msgData, path);
-            }
+            var msgData = LoadOrCreateAsset<MessageSO>(AssetDataFolder + "MsgData.asset");
             msgData.Clear();
-            var fileInfos = Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden));
-            foreach (var file in fileInfos)
+            foreach (var file in Directory.CreateDirectory(MsgExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)))
             {
                 using var stream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
@@ -254,7 +261,7 @@ namespace ExcelDB
         {
             List<string> warningLogs = new();
 
-            List<string> folderNames = new();
+            List<string> tableNames = new();
             List<DataTableCollection> excelData = new();
 
             var fileInfos = Directory.CreateDirectory(TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)).ToArray();
@@ -268,7 +275,7 @@ namespace ExcelDB
 
                 foreach (DataTable table in tables)
                 {
-                    if (table.Columns.Count == 0 || table.Rows.Count < 2)
+                    if (table.Columns.Count < 1 || table.Rows.Count < 2)
                     {
                         continue;
                     }
@@ -288,210 +295,18 @@ namespace ExcelDB
                         labels.Add(label);
                     }
                     table.TableName = GetTableName(table.TableName, file.Name);
-                    CreateTableEnum(table.TableName, labels, table.Rows[0][0].ToString() == "ref");
+                    CreateTableEnum(table.TableName, labels, table.Rows[0][0].ToString() == Ref);
 
-                    folderNames.Add(table.TableName);
+                    tableNames.Add(table.TableName);
                 }
             }
 
-            var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelDBAsset);
-            builderData.Updata(folderNames);
-
-            //-------------------------------------------------------------------------------------------------------------
-
-            int GetEmptyCount(int startIndex, DataTable table, int index)
-            {
-                int count = 0;
-                for (int i = startIndex; i < table.Columns.Count; i++)
-                {
-                    var type = table.Rows[0][i].ToString();
-                    if (type == "]")
-                    {
-                        return count;
-                    }
-                    if (type == string.Empty)
-                    {
-                        count++;
-                    }
-                    else
-                    {
-                        Debug.LogError($"Miss \"]\" at [{fileInfos[index].Name} - {table.TableName}]");
-                        return -1;
-                    }
-                }
-                Debug.LogError($"Miss \"]\" at [{fileInfos[index].Name} - {table.TableName}]");
-                return -1;
-            }
-
-            Field GetField(int startIndex, DataTable table, int index)
-            {
-                Field field;
-                var type = table.Rows[0][startIndex].ToString();
-                if (type == string.Empty)
-                {
-                    Debug.LogError($"Table has empty type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex})]");
-                    return null;
-                }
-                var name = table.Rows[1][startIndex].ToString();
-                if (name == string.Empty)
-                {
-                    Debug.LogError($"Table has empty field! [{fileInfos[index].Name} - {table.TableName} - (1,{startIndex})]");
-                    return null;
-                }
-                if (type == "class[")
-                {
-                    field = new Field($"{GetTableName(table.TableName, fileInfos[index].Name)}{table.Rows[1][startIndex]}", table.Rows[1][startIndex].ToString(), true, false);
-                    var fields = GetFields(startIndex + 1, table, index, true);
-                    if (fields == null)
-                    {
-                        return null;
-                    }
-                    field.SubClass = fields;
-                    foreach (var f in fields)
-                    {
-                        field.ListItemLength += f.FieldLength;
-                    }
-                    var count = GetEmptyCount(startIndex + 1 + field.ListItemLength, table, index);
-                    if (count == -1)
-                    {
-                        return null;
-                    }
-                    if (count % field.ListItemLength != 0)
-                    {
-                        Debug.LogError($"SubClass count is not correct! [{fileInfos[index].Name} - {table.TableName} - {field.Name}");
-                        return null;
-                    }
-                    field.ListCount += count / field.ListItemLength;
-                    field.FieldLength = field.ListCount * field.ListItemLength + 2;
-                }
-                else
-                {
-                    var isList = false;
-                    if (type.Length > 2 && type[(type.Length - 2)..] == "[]")
-                    {
-                        isList = true;
-                        type = type[..(type.Length - 2)];
-                    }
-                    var typeList = type.Split(";");
-                    var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
-                    if (typeList.Length == 1 || type[^1] == ';')
-                    {
-                        if (!isBaseType && !folderNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
-                        {
-                            Debug.LogError($"There are not support type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex}) - {typeList[0]}]");
-                            return null;
-                        }
-                        if (isList && isBaseType && !TypeConvert.SupportListType.Contains(typeList[0]))
-                        {
-                            Debug.LogError($"There are not support list type! [{fileInfos[index].Name} - {table.TableName} - (0,{startIndex}) - {typeList[0]}[] ]");
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        //check enum add duplicates name
-                        List<string[]> enumNames = new(typeList.Length);
-                        for (var i = 0; i < typeList.Length; i++)
-                        {
-                            if (folderNames.Contains(typeList[i]))
-                            {
-                                var t = Type.GetType($"Table.{typeList[i]},Assembly-CSharp");
-                                if (t != null)
-                                {
-                                    enumNames.Add(Enum.GetNames(t));
-                                }
-                            }
-                            else
-                            {
-                                var t = Type.GetType($"{typeList[i]},Assembly-CSharp");
-                                if (t == null)
-                                {
-                                    Debug.LogError($"Muilt type must be enum! [{fileInfos[index].Name} - {table.TableName} - {type} - {typeList[i]}]");
-                                    return null;
-                                }
-                                else
-                                {
-                                    enumNames.Add(Enum.GetNames(t));
-                                }
-                            }
-                        }
-                        for (var i = 0; i < enumNames.Count - 1; i++)
-                        {
-                            for (int j = 0; j < enumNames[i].Length; j++)
-                            {
-                                var enumName = enumNames[i][j];
-                                if (string.Equals("None", enumName))
-                                {
-                                    continue;
-                                }
-                                for (int k = i + 1; k < enumNames.Count; k++)
-                                {
-                                    for (int l = 0; l < enumNames[k].Length; l++)
-                                    {
-                                        if (string.Equals(enumName, enumNames[k][l]))
-                                        {
-                                            var warning = $"There are same enum name [{enumName}] in [{typeList[i]}] and [{typeList[k]}], please use [{typeList[i]}.{enumName}] or [{typeList[k]}.{enumName}].";
-                                            Debug.LogWarning(warning);
-                                            warningLogs.Add(warning);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    field = new Field(type, name, isBaseType, isList);
-                    field.ListItemLength = 1;
-                    if (startIndex + 1 < table.Columns.Count && table.Rows[0][startIndex + 1].ToString() == "[")
-                    {
-                        var count = GetEmptyCount(startIndex + 2, table, index);
-                        if (count == -1)
-                        {
-                            return null;
-                        }
-                        if ((count + 2) % field.ListItemLength != 0)
-                        {
-                            Debug.LogError($"{typeList[0]} count is not correct! [{fileInfos[index].Name} - {table.TableName} - {field.Name}");
-                            return null;
-                        }
-                        field.ListCount = (count + 2) / field.ListItemLength;
-                        field.FieldLength = field.ListCount * field.ListItemLength + 1;
-                    }
-                }
-                return field;
-            }
-
-            List<Field> GetFields(int startIndex, DataTable table, int index, bool sub = false)
-            {
-                List<Field> fields = new();
-                while (startIndex < table.Columns.Count)
-                {
-                    if (sub)
-                    {
-                        var type = table.Rows[0][startIndex].ToString();
-                        if (type == string.Empty || type == "]")
-                        {
-                            return fields;
-                        }
-                    }
-                    var field = GetField(startIndex, table, index);
-                    if (field == null)
-                    {
-                        return null;
-                    }
-                    fields.Add(field);
-                    startIndex += field.FieldLength;
-                }
-                if (sub)
-                {
-                    return null;
-                }
-                return fields;
-            }
+            //--------------------------------------------------------------------------------------
 
             //CreateDataClass
             List<ClassInfo> classInfos = new();
 
-            for (int index = 0; index < fileInfos.Length; ++index)
+            for (int index = 0; index < fileInfos.Length; index++)
             {
                 foreach (DataTable table in excelData[index])
                 {
@@ -499,26 +314,218 @@ namespace ExcelDB
                     {
                         continue;
                     }
-                    List<Field> fields = GetFields(1, table, index);
+
+                    var fileName = fileInfos[index].Name;
+
+                    List<Field> fields = GetFields(1);
                     if (fields == null)
                     {
                         return;
                     }
-                    var tableName = GetTableName(table.TableName, fileInfos[index].Name);
-                    if (!folderNames.Contains(tableName))
+
+                    CreateTableDataClass(table.TableName, fields);
+                    var dic = table.Rows[0][0].ToString() == Ref;
+                    CreateTableSO(table.TableName, fields, dic);
+
+                    classInfos.Add(new ClassInfo(table.TableName, dic));
+
+                    #region calc field func
+                    int GetEmptyCount(int startIndex)
                     {
-                        folderNames.Add(tableName);
+                        int count = 0;
+                        for (int i = startIndex; i < table.Columns.Count; i++)
+                        {
+                            var type = table.Rows[0][i].ToString();
+                            if (type == "]")
+                            {
+                                return count;
+                            }
+                            if (type == string.Empty)
+                            {
+                                count++;
+                            }
+                            else
+                            {
+                                Debug.LogError($"Miss \"]\" at [{fileName} - {table.TableName}]");
+                                return -1;
+                            }
+                        }
+                        Debug.LogError($"Miss \"]\" at [{fileName} - {table.TableName}]");
+                        return -1;
                     }
 
-                    CreateTableDataClass(tableName, fields);
-                    var dic = table.Rows[0][0].ToString() == "ref";
-                    CreateTableSO(tableName, fields, dic);
+                    Field GetField(int startIndex)
+                    {
+                        Field field;
+                        var type = table.Rows[0][startIndex].ToString();
+                        if (type == string.Empty)
+                        {
+                            Debug.LogError($"Table has empty type! [{fileName} - {table.TableName} - (0,{startIndex})]");
+                            return null;
+                        }
+                        var name = table.Rows[1][startIndex].ToString();
+                        if (name == string.Empty)
+                        {
+                            Debug.LogError($"Table has empty field! [{fileName} - {table.TableName} - (1,{startIndex})]");
+                            return null;
+                        }
+                        if (type == "class[")
+                        {
+                            field = new Field($"{table.TableName}{table.Rows[1][startIndex]}", table.Rows[1][startIndex].ToString(), true, false);
+                            var fields = GetFields(startIndex + 1, true);
+                            if (fields == null)
+                            {
+                                return null;
+                            }
+                            field.SubClass = fields;
+                            foreach (var f in fields)
+                            {
+                                field.ListItemLength += f.FieldLength;
+                            }
+                            var count = GetEmptyCount(startIndex + 1 + field.ListItemLength);
+                            if (count == -1)
+                            {
+                                return null;
+                            }
+                            if (count % field.ListItemLength != 0)
+                            {
+                                Debug.LogError($"SubClass count is not correct! [{fileName} - {table.TableName} - {field.Name}");
+                                return null;
+                            }
+                            field.ListCount += count / field.ListItemLength;
+                            field.FieldLength = field.ListCount * field.ListItemLength + 2;
+                        }
+                        else
+                        {
+                            var isList = false;
+                            if (type.Length > 2 && type[(type.Length - 2)..] == "[]")
+                            {
+                                isList = true;
+                                type = type[..(type.Length - 2)];
+                            }
+                            var typeList = type.Split(";");
+                            var isBaseType = TypeConvert.SupportType.Contains(typeList[0]);
+                            if (typeList.Length == 1 || type[^1] == ';')
+                            {
+                                if (!isBaseType && !tableNames.Contains(typeList[0]) && Type.GetType($"{typeList[0]},Assembly-CSharp") == null)
+                                {
+                                    Debug.LogError($"There are not support type! [{fileName} - {table.TableName} - (0,{startIndex}) - {typeList[0]}]");
+                                    return null;
+                                }
+                                if (isList && isBaseType && !TypeConvert.SupportListType.Contains(typeList[0]))
+                                {
+                                    Debug.LogError($"There are not support list type! [{fileName} - {table.TableName} - (0,{startIndex}) - {typeList[0]}[] ]");
+                                    return null;
+                                }
+                            }
+                            #region check enum add duplicates name
+                            else
+                            {
+                                List<string[]> enumNames = new(typeList.Length);
+                                for (var i = 0; i < typeList.Length; i++)
+                                {
+                                    if (tableNames.Contains(typeList[i]))
+                                    {
+                                        var t = Type.GetType($"Table.{typeList[i]},Assembly-CSharp");
+                                        if (t != null)
+                                        {
+                                            enumNames.Add(Enum.GetNames(t));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var t = Type.GetType($"{typeList[i]},Assembly-CSharp");
+                                        if (t == null)
+                                        {
+                                            Debug.LogError($"Muilt type must be enum! [{fileName} - {table.TableName} - {type} - {typeList[i]}]");
+                                            return null;
+                                        }
+                                        else
+                                        {
+                                            enumNames.Add(Enum.GetNames(t));
+                                        }
+                                    }
+                                }
+                                for (var i = 0; i < enumNames.Count - 1; i++)
+                                {
+                                    for (int j = 0; j < enumNames[i].Length; j++)
+                                    {
+                                        var enumName = enumNames[i][j];
+                                        if (string.Equals("None", enumName))
+                                        {
+                                            continue;
+                                        }
+                                        for (int k = i + 1; k < enumNames.Count; k++)
+                                        {
+                                            for (int l = 0; l < enumNames[k].Length; l++)
+                                            {
+                                                if (string.Equals(enumName, enumNames[k][l]))
+                                                {
+                                                    var warning = $"There are same enum name [{enumName}] in [{typeList[i]}] and [{typeList[k]}], please use [{typeList[i]}.{enumName}] or [{typeList[k]}.{enumName}].";
+                                                    Debug.LogWarning(warning);
+                                                    warningLogs.Add(warning);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #endregion
 
-                    classInfos.Add(new ClassInfo(tableName, dic));
+                            field = new Field(type, name, isBaseType, isList) { ListItemLength = 1 };
+                            if (startIndex + 1 < table.Columns.Count && table.Rows[0][startIndex + 1].ToString() == "[")
+                            {
+                                var count = GetEmptyCount(startIndex + 2);
+                                if (count == -1)
+                                {
+                                    return null;
+                                }
+                                if ((count + 2) % field.ListItemLength != 0)
+                                {
+                                    Debug.LogError($"{typeList[0]} count is not correct! [{fileName} - {table.TableName} - {field.Name}");
+                                    return null;
+                                }
+                                field.ListCount = (count + 2) / field.ListItemLength;
+                                field.FieldLength = field.ListCount * field.ListItemLength + 1;
+                            }
+                        }
+                        return field;
+                    }
+
+                    List<Field> GetFields(int startIndex, bool sub = false)
+                    {
+                        List<Field> fields = new();
+                        while (startIndex < table.Columns.Count)
+                        {
+                            if (sub)
+                            {
+                                var type = table.Rows[0][startIndex].ToString();
+                                if (type == string.Empty || type == "]")
+                                {
+                                    return fields;
+                                }
+                            }
+                            var field = GetField(startIndex);
+                            if (field == null)
+                            {
+                                return null;
+                            }
+                            fields.Add(field);
+                            startIndex += field.FieldLength;
+                        }
+                        if (sub)
+                        {
+                            return null;
+                        }
+                        return fields;
+                    }
+                    #endregion
                 }
             }
             CreateTableAccessor(classInfos);
 
+            var builderData = AssetDatabase.LoadAssetAtPath<ExcelBuilderSO>(ExcelDBAsset);
+            builderData.Updata(tableNames);
             builderData.LoadTableData = true;
             builderData.WarningLogs = new(warningLogs);
             EditorUtility.SetDirty(builderData);
@@ -536,13 +543,7 @@ namespace ExcelDB
             LabelRefSO tabelRef = default;
             if (needRef)
             {
-                var path = AssetRefFolder + name + "Ref.asset";
-                tabelRef = AssetDatabase.LoadAssetAtPath<LabelRefSO>(path);
-                if (!tabelRef)
-                {
-                    tabelRef = ScriptableObject.CreateInstance<LabelRefSO>();
-                    AssetDatabase.CreateAsset(tabelRef, path);
-                }
+                tabelRef = LoadOrCreateAsset<LabelRefSO>(AssetRefFolder + name + "Ref.asset");
             }
 
             var code = new StringBuilder();

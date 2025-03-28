@@ -1,20 +1,22 @@
 using UnityEngine;
-using TMPro;
 
-public class DropdownEx : TMP_Dropdown
+namespace TMPro
 {
-    [SerializeField, SearchableEnum]
-    private MsgLabel[] _labels;
-
-    public MsgLabel[] Labels => _labels;
-
-    protected override void Start()
+    public class DropdownEx : TMP_Dropdown
     {
-        base.Start();
-        for (int i = 0; i < options.Count; ++i)
+        [SerializeField, SearchableEnum]
+        private MsgLabel[] _labels;
+
+        public MsgLabel[] Labels => _labels;
+
+        protected override void Start()
         {
-            options[i].text = MsgAccessor.GetMessage(_labels[i]);
+            base.Start();
+            for (int i = 0; i < options.Count; ++i)
+            {
+                options[i].text = MsgAccessor.GetMessage(_labels[i]);
+            }
+            captionText.text = options.Count > 0 ? options[0].text : string.Empty;
         }
-        captionText.text = options.Count > 0 ? options[0].text : string.Empty;
     }
 }

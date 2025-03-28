@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
 using System.Linq;
 
-namespace ExcelDB
+namespace Table
 {
     public class ExcelBuilderSO : ScriptableObject
     {

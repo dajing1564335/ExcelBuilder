@@ -1,37 +1,39 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
-public class TextMeshProUGUIEx : TextMeshProUGUI
+namespace TMPro
 {
-    [SerializeField, SearchableEnum]
-    private MsgLabel _label;
-
-    public MsgLabel Label
+    public class TextMeshProUGUIEx : TextMeshProUGUI
     {
-        get => _label;
-        set
+        [SerializeField, SearchableEnum]
+        private MsgLabel _label;
+
+        public MsgLabel Label
         {
-            _label = value;
-            text = MsgAccessor.GetMessage(value);
+            get => _label;
+            set
+            {
+                _label = value;
+                text = MsgAccessor.GetMessage(value);
+            }
         }
-    }
 
-    public void SetText(MsgLabel label, List<int> param)
-    {
-        _label = label;
-        text = MsgAccessor.GetMessage(label, param);
-    }
-    
-    public void SetText(MsgLabel label, params object[] param)
-    {
-        _label = label;
-        text = MsgAccessor.GetMessage(label, param);
-    }
+        public void SetText(MsgLabel label, List<int> param)
+        {
+            _label = label;
+            text = MsgAccessor.GetMessage(label, param);
+        }
 
-    protected override void Awake()
-    {
-        base.Awake();
-        text = MsgAccessor.GetMessage(_label);
+        public void SetText(MsgLabel label, params object[] param)
+        {
+            _label = label;
+            text = MsgAccessor.GetMessage(label, param);
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            text = MsgAccessor.GetMessage(_label);
+        }
     }
 }

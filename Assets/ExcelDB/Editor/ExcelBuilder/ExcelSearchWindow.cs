@@ -7,7 +7,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace ExcelDB
+namespace Table
 {
     public class ExcelSearchWindow : EditorWindow
     {
@@ -53,16 +53,14 @@ namespace ExcelDB
             _data.Clear();
             foreach (var file in Directory.CreateDirectory(ExcelBuilder.TableExcelFolder).GetFiles("*.xlsx", SearchOption.AllDirectories).Where(f => !f.Attributes.HasFlag(FileAttributes.Hidden)))
             {
-                var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
+                using var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
                 var tables = ExcelBuilder.RemoveComment(reader.AsDataSet().Tables);
                 _data.Add(tables);
                 foreach (DataTable table in tables)
                 {
                     table.TableName = ExcelBuilder.GetTableName(table.TableName, file.Name);
                 }
-                reader.Close();
-                steam.Close();
             }
         }
 

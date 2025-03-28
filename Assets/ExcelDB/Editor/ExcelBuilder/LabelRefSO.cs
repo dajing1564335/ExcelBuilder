@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ExcelDB
+namespace Table
 {
     public class LabelRefSO : ScriptableObject
     {

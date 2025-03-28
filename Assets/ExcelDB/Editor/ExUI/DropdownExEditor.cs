@@ -1,23 +1,25 @@
 using System.Collections.Generic;
-using TMPro.EditorUtilities;
 using UnityEditor;
 
-[CustomEditor(typeof(DropdownEx))]
-public class DropdownExEditor : DropdownEditor
+namespace TMPro.EditorUtilities
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(DropdownEx))]
+    public class DropdownExEditor : DropdownEditor
     {
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("_labels"));
-        var dropdownEx = (DropdownEx)target;
-        List<string> strings = new();
-        foreach (var label in dropdownEx.Labels)
+        public override void OnInspectorGUI()
         {
-            strings.Add(MsgAccessor.GetMessage(label));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_labels"));
+            var dropdownEx = (DropdownEx)target;
+            List<string> strings = new();
+            foreach (var label in dropdownEx.Labels)
+            {
+                strings.Add(MsgAccessor.GetMessage(label));
+            }
+            dropdownEx.ClearOptions();
+            dropdownEx.AddOptions(strings);
+            dropdownEx.captionText.text = strings.Count > 0 ? strings[0] : string.Empty;
+            serializedObject.ApplyModifiedProperties();
+            base.OnInspectorGUI();
         }
-        dropdownEx.ClearOptions();
-        dropdownEx.AddOptions(strings);
-        dropdownEx.captionText.text = strings.Count > 0 ? strings[0] : string.Empty;
-        serializedObject.ApplyModifiedProperties();
-        base.OnInspectorGUI();
     }
 }
