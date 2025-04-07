@@ -31,8 +31,11 @@ public class Builder
 
         PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, DEBUG_BUILD);
         BuildPipeline.BuildPlayer(EditorBuildSettings.scenes, ExeDebugPath, BuildTarget.StandaloneWindows, BuildOptions.Development | BuildOptions.AllowDebugging);
-    
-        schema.IncludeInBuild = false;
+
+        if (schema != null)
+        {
+            schema.IncludeInBuild = false;
+        }
         AssetDatabase.SaveAssets();
     }
 
