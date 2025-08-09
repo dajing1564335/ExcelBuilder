@@ -35,7 +35,13 @@ public class AssetManager : SingletonMonoBehaviour<AssetManager>
             }
             else
             {
-                h.Handle.Completed += op => action.Invoke((T)op.Result);
+                h.Handle.Completed += op =>
+                {
+                    if (_cache[asset].Count > 0)
+                    {
+                        action.Invoke((T)op.Result);
+                    }
+                };
             }
         }
         else

@@ -91,10 +91,12 @@ namespace util
         {
             _anim.Clear();
         }
-        
-        public T GetValue()
+
+        public T GetValue() => GetValue(Time.deltaTime);
+
+        public T GetValue(float deltaTime)
         {
-            _timer += Time.deltaTime;
+            _timer += deltaTime;
             if (_timer < current.Time) return CalValue();
 #if DelayCallback
             DelayInvoke(current.CallBack).Forget();
