@@ -250,7 +250,7 @@ namespace Table
             {
                 foreach (var type in types.Split(";"))
                 {
-                    var t = Type.GetType($"Table.{type}");
+                    var t = Type.GetType($"Table.DB{type}");
                     if (t != null && Enum.TryParse(t, value, out object retValue))
                     {
                         return (int)retValue;
@@ -267,7 +267,7 @@ namespace Table
             {
                 var type = value[..index];
                 var newValue = value[(index + 1)..];
-                var t = Type.GetType($"Table.{type}");
+                var t = Type.GetType($"Table.DB{type}");
                 if (t != null && Enum.TryParse(t, newValue, out object retValue))
                 {
                     return (int)retValue;

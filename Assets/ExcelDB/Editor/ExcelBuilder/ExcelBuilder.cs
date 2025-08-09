@@ -371,7 +371,7 @@ namespace Table
                         }
                         if (type == "class[")
                         {
-                            field = new Field($"{table.TableName}{table.Rows[1][startIndex]}", table.Rows[1][startIndex].ToString(), true, false);
+                            field = new Field($"DB{table.TableName}{table.Rows[1][startIndex]}", table.Rows[1][startIndex].ToString(), true, false);
                             var fields = GetFields(startIndex + 1, true);
                             if (fields == null)
                             {
@@ -417,6 +417,10 @@ namespace Table
                                     Debug.LogError($"There are not support list type! [{fileName} - {table.TableName} - (0,{startIndex}) - {typeList[0]}[] ]");
                                     return null;
                                 }
+                                if (tableNames.Contains(type))
+                                {
+                                    type = "DB" + type;
+                                }
                             }
                             #region check enum add duplicates name
                             else
@@ -426,7 +430,7 @@ namespace Table
                                 {
                                     if (tableNames.Contains(typeList[i]))
                                     {
-                                        var t = Type.GetType($"Table.{typeList[i]},Assembly-CSharp");
+                                        var t = Type.GetType($"Table.DB{typeList[i]},Assembly-CSharp");
                                         if (t != null)
                                         {
                                             enumNames.Add(Enum.GetNames(t));
@@ -537,7 +541,7 @@ namespace Table
 
         private static void CreateTableEnum(string name, List<string> labels, bool needRef)
         {
-            var folder = TableFolder + name + "/";
+            var folder = $"{TableFolder}{name}/";
             Directory.CreateDirectory(folder);
 
             LabelRefSO tabelRef = default;
@@ -549,7 +553,7 @@ namespace Table
             var code = new StringBuilder();
             code.AppendLine("namespace Table");
             code.AppendLine("{");
-            code.AppendLine($"\tpublic enum {name}");
+            code.AppendLine($"\tpublic enum DB{name}");
             code.AppendLine("\t{");
             if (needRef)
             {
@@ -570,7 +574,7 @@ namespace Table
             code.AppendLine("\t}");
             code.AppendLine("}");
 
-            File.WriteAllText(folder + name + ".cs", code.ToString());
+            File.WriteAllText($"{folder}DB{name}.cs", code.ToString());
         }
 
         private static void CreateTableDataClass(string name, List<Field> fields)
@@ -607,7 +611,7 @@ namespace Table
                 }
             }
 
-            var folder = TableFolder + name + "/";
+            var folder = $"{TableFolder}{name}/";
             Directory.CreateDirectory(folder);
 
             code.AppendLine("using System.Collections.Generic;");
@@ -615,14 +619,14 @@ namespace Table
             code.AppendLine();
             code.AppendLine("namespace Table");
             code.AppendLine("{");
-            CreateClass(name + "Data", fields);
+            CreateClass($"DB{name}Data", fields);
             foreach (var field in fields)
             {
                 CreateSubClass(field);
             }
             code.AppendLine("}");
 
-            File.WriteAllText(folder + name + "Data.cs", code.ToString());
+            File.WriteAllText($"{folder}DB{name}Data.cs", code.ToString());
         }
 
         private static void CreateTableSO(string name, List<Field> fields, bool needRef)
@@ -703,9 +707,9 @@ namespace Table
             code.AppendLine();
             code.AppendLine("namespace Table");
             code.AppendLine("{");
-            code.AppendLine($"\tpublic class {name}SO : ScriptableObjectBase");
+            code.AppendLine($"\tpublic class DB{name}SO : ScriptableObjectBase");
             code.AppendLine("\t{");
-            var type = (needRef ? $"SerializableDictionary<{name}, " : "List<") + $"{name}Data>";
+            var type = (needRef ? $"SerializableDictionary<DB{name}, " : "List<") + $"DB{name}Data>";
             code.AppendLine($"\t\tpublic {type} Datas;");
             code.AppendLine();
             code.AppendLine("#if UNITY_EDITOR");
@@ -721,7 +725,7 @@ namespace Table
             code.AppendLine("\t\t\t\t}");
 
             int index = 1;
-            code.AppendLine($"\t\t\t\t{name}Data data = new();");
+            code.AppendLine($"\t\t\t\tDB{name}Data data = new();");
             foreach (var field in fields)
             {
                 code.AppendLine(GetFieldCode(index, field, "data", 0, -1));
@@ -730,7 +734,7 @@ namespace Table
             code.Append("\t\t\t\tDatas.Add(");
             if (needRef)
             {
-                code.Append($"({name})System.Enum.Parse(typeof({name}), row[0].ToString()), ");
+                code.Append($"(DB{name})System.Enum.Parse(typeof(DB{name}), row[0].ToString()), ");
             }
             code.AppendLine($"data);");
             code.AppendLine("\t\t\t}");
@@ -738,24 +742,26 @@ namespace Table
             code.AppendLine("#endif");
             code.AppendLine("\t}");
             code.AppendLine("}");
-            File.WriteAllText(TableFolder + name + "/" + name + "SO.cs", code.ToString());
+            File.WriteAllText($"{TableFolder}{name}/DB{name}SO.cs", code.ToString());
         }
 
         private static void CreateTableAccessor(List<ClassInfo> infos)
         {
             var code = new StringBuilder();
+            code.AppendLine("using Table;");
+            code.AppendLine();
             code.AppendLine("public static class TableAccessor");
             code.AppendLine("{");
             foreach (var info in infos)
             {
-                code.AppendLine($"\tpublic static Table.TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data> {info.Name};");
+                code.AppendLine($"\tpublic static TableAccessor{(info.Dic ? "Dictionary" : "List")}<DB{info.Name}, DB{info.Name}Data> {info.Name};");
             }
             code.AppendLine();
             code.AppendLine("\tpublic static void LoadData()");
             code.AppendLine("\t{");
             foreach (var info in infos)
             {
-                code.AppendLine($"\t\t{info.Name} = new Table.TableAccessor{(info.Dic ? "Dictionary" : "List")}<Table.{info.Name}, Table.{info.Name}Data>();");
+                code.AppendLine($"\t\t{info.Name} = new TableAccessor{(info.Dic ? "Dictionary" : "List")}<DB{info.Name}, DB{info.Name}Data>();");
             }
             code.AppendLine("\t}");
             code.AppendLine("}");
@@ -804,11 +810,11 @@ namespace Table
                     var tableName = GetTableName(table.TableName, file.Name);
 
                     //CreateTableData
-                    var path = AssetDataFolder + tableName + "Data.asset";
-                    var tableData = AssetDatabase.LoadAssetAtPath<Table.ScriptableObjectBase>(path);
+                    var path = $"{AssetDataFolder}{tableName}Data.asset";
+                    var tableData = AssetDatabase.LoadAssetAtPath<ScriptableObjectBase>(path);
                     if (!tableData)
                     {
-                        tableData = (Table.ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType($"Table.{tableName}SO,Assembly-CSharp"));
+                        tableData = (ScriptableObjectBase)ScriptableObject.CreateInstance(Type.GetType($"Table.DB{tableName}SO,Assembly-CSharp"));
                         AssetDatabase.CreateAsset(tableData, path);
                     }
                     tableData.CreateData(table);
