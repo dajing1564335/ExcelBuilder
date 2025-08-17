@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.AddressableAssets;
@@ -76,5 +77,33 @@ public class AssetManager : SingletonMonoBehaviour<AssetManager>
         if (handle.Handle.Status != AsyncOperationStatus.Succeeded) return;
         Addressables.Release(handle.Handle);
         _cache.Remove(asset);
+    }
+
+    public void LoadAssetsWithLabel<T>(string label)
+    {
+        Addressables.LoadResourceLocationsAsync(label).Completed += locations =>
+        {
+            foreach (var location in locations.Result)
+            {
+                if (Enum.TryParse(location.PrimaryKey, out AssetEnum assetEnum))
+                {
+                    LoadAsset<T>(assetEnum);
+                }
+            }
+        };
+    }
+
+    public void UnloadAssetsWithLabel(string label)
+    {
+        Addressables.LoadResourceLocationsAsync(label).Completed += locations =>
+        {
+            foreach (var location in locations.Result)
+            {
+                if (Enum.TryParse(location.PrimaryKey, out AssetEnum assetEnum))
+                {
+                    UnloadAsset(assetEnum);
+                }
+            }
+        };
     }
 }

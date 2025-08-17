@@ -1,11 +1,10 @@
 using System;
-using System.Linq;
-using UnityEditor;
-using UnityEditor.AddressableAssets.Settings;
-using UnityEditor.AddressableAssets;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
+using UnityEditor;
+using UnityEditor.AddressableAssets;
 
 public class AddressableFormat
 {
@@ -36,6 +35,11 @@ public class AddressableFormat
                 continue;
             }
             //groups.Add(name);
+            if (!settings.GetLabels().Contains(name))
+            {
+                settings.AddLabel(name);
+            }
+
             foreach (var entry in group.entries)
             {
                 var address = Path.GetFileNameWithoutExtension(entry.address);
@@ -43,6 +47,11 @@ public class AddressableFormat
                 if (address != entry.address)
                 {
                     entry.SetAddress(address);
+                }
+                if (!entry.labels.Contains(name))
+                {
+                    entry.labels.Clear();
+                    entry.labels.Add(name);
                 }
                 var index = names.IndexOf(address);
                 code.Append($"\t{entry.address} = {(index >= 0 ? values[index] : ++max)},\n");
