@@ -14,7 +14,7 @@ namespace Table
         public string SearchPattern;
 
         private Vector2 scrollPos;
-        private readonly List<DataTableCollection> _data = new();
+        private readonly List<DataTable> _data = new();
         private readonly List<string> _result = new();
 
         [MenuItem("ExcelBuilder/SearchWindow")]
@@ -56,10 +56,14 @@ namespace Table
                 using var steam = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var reader = ExcelReaderFactory.CreateOpenXmlReader(steam);
                 var tables = ExcelBuilder.RemoveComment(reader.AsDataSet().Tables);
-                _data.Add(tables);
                 foreach (DataTable table in tables)
                 {
+                    if (table.Columns.Count < 2 || table.Rows.Count < 3 || table.TableName == ExcelBuilder.SkipSheetName)
+                    {
+                        continue;
+                    }
                     table.TableName = ExcelBuilder.GetTableName(table.TableName, file.Name);
+                    _data.Add(table);
                 }
             }
         }
@@ -67,26 +71,19 @@ namespace Table
         private void Search()
         {
             _result.Clear();
-            foreach (var tables in _data)
+            foreach (var table in _data)
             {
-                foreach (DataTable table in tables)
+                for (int i = 2; i < table.Rows.Count; i++)
                 {
-                    if (table.Columns.Count == 0 || table.Rows.Count < 2)
+                    if (table.Rows[i][0] is DBNull)
                     {
                         continue;
                     }
-                    for (int i = 2; i < table.Rows.Count; i++)
+                    for (int j = 1; j < table.Columns.Count; j++)
                     {
-                        if (table.Rows[i][0] is DBNull)
+                        if (table.Rows[i][j].ToString().Contains(SearchPattern))
                         {
-                            continue;
-                        }
-                        for (int j = 1; j < table.Columns.Count; j++)
-                        {
-                            if (table.Rows[i][j].ToString().Contains(SearchPattern))
-                            {
-                                _result.Add(table.TableName.PadRight(20) + table.Rows[i][0].ToString());
-                            }
+                            _result.Add(table.TableName.PadRight(20) + table.Rows[i][0].ToString());
                         }
                     }
                 }

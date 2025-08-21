@@ -28,6 +28,8 @@ namespace Table
         private const string Comment = "comment";
         private const string Ref = "ref";
 
+        public const string SkipSheetName = "Reference";
+
         #region RemoveComment
         private static void RemoveComment(DataTable table)
         {
@@ -275,7 +277,7 @@ namespace Table
 
                 foreach (DataTable table in tables)
                 {
-                    if (table.Columns.Count < 1 || table.Rows.Count < 2)
+                    if (table.Columns.Count < 1 || table.Rows.Count < 2 || table.TableName == SkipSheetName)
                     {
                         continue;
                     }
@@ -310,7 +312,7 @@ namespace Table
             {
                 foreach (DataTable table in excelData[index])
                 {
-                    if (table.Columns.Count < 2 || table.Rows.Count < 2)
+                    if (table.Columns.Count < 2 || table.Rows.Count < 2 || table.TableName == SkipSheetName)
                     {
                         continue;
                     }
@@ -803,7 +805,7 @@ namespace Table
 
                 foreach (DataTable table in RemoveComment(reader.AsDataSet().Tables))
                 {
-                    if (table.Columns.Count < 2 || table.Rows.Count < 3)
+                    if (table.Columns.Count < 2 || table.Rows.Count < 3 || table.TableName == SkipSheetName)
                     {
                         continue;
                     }
